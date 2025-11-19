@@ -21,7 +21,7 @@ urlpatterns = [
     path('checkout/planos/', views.choose_plan, name='choose_plan'),
     
     # 2. Rota de Simulação de Pagamento (Recebe o ID do Plano e Redireciona para o PagSeguro)
-    # MODIFICADO: Removemos a rota antiga sem ID e usamos apenas esta.
+    # Esta rota foi renomeada de 'simulate_checkout' para 'simulate_checkout_with_plan'
     path('checkout/pagar/<int:plan_id>/', views.simulate_checkout_with_plan, name='simulate_checkout_with_plan'),
     
     # 3. Rota de Confirmação/Webhook (Chamada pelo PagBank no mundo real)
