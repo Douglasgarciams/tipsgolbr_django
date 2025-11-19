@@ -1,5 +1,6 @@
 import os 
 from pathlib import Path
+import dj_database_url # Importa a biblioteca para ler a URL de conexão do PostgreSQL
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -73,12 +74,21 @@ WSGI_APPLICATION = 'tipsgolbr_config.wsgi.application'
 
 
 # Database
+# CONFIGURAÇÃO FINAL DO BANCO DE DADOS (SQLite para dev, PostgreSQL para prod)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Se a variável DATABASE_URL existir (no Render), use PostgreSQL
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        conn_health_check=True,
+    )
 
 
 # Password validation
