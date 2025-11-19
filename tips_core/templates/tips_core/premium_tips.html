@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Tips Premium{% endblock %}
+
+{% block content %}
+    <h1 class="text-warning fw-bold mb-4 border-bottom pb-2">Conteúdo Premium 👑</h1>
+
+    <p class="lead text-light mb-5">
+        Bem-vindo, **{{ user.username }}**! Aqui estão as análises exclusivas e dicas de alto valor reservadas para membros Premium. Sua assinatura expira em: 
+        <span class="badge bg-primary fs-6">{{ user.premium_expiration_date|date:"d/m/Y" }}</span>
+    </p>
+
+    <div class="row">
+        {% for tip in tips %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="tip-card p-4 
+                    {% if tip.status == 'WIN' %}win{% elif tip.status == 'LOSS' %}loss{% else %}pending{% endif %}">
+                    
+                    <h5 class="fw-bold mb-3 text-warning">
+                        <i class="fas fa-crown me-2"></i> Tip Premium
+                    </h5>
+                    
+                    <h5 class="fw-bold mb-3 text-light">
+                        {{ tip.match_title }} <small class="text-muted">({{ tip.league }})</small>
+                    </h5>
+                    
+                    <p class="small text-light">Data: {{ tip.match_date|date:"d/m/Y H:i" }}</p>
+                    <hr class="my-2">
+                    <p class="text-light"><strong>🎯 Prognóstico:</strong> {{ tip.prediction }}</p>
+                    <p class="text-light">
+                        <strong>📊 Odd:</strong> 
+                        <span class="badge bg-warning fs-6 text-dark fw-bold">{{ tip.odd_value }}</span>
+                        | Status: <span class="fw-bold">{{ tip.get_status_display }}</span>
+                    </p>
+                    
+                    {% if tip.link_aposta %}
+                        <a href="{{ tip.link_aposta }}" target="_blank" class="btn btn-success btn-sm w-100 mt-2">
+                            Apostar com Confiança <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info hero-section-card" role="alert">
+                    <i class="fas fa-info-circle"></i> Nenhuma dica Premium disponível no momento. Adicione tips com o nível de acesso "Premium" no Admin.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <div class="mt-5 text-center">
+        <a href="{% url 'home' %}" class="btn btn-outline-light"><i class="fas fa-arrow-left"></i> Voltar para Tips Gratuitas</a>
+    </div>
+
+{% endblock content %}
