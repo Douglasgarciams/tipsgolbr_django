@@ -17,7 +17,7 @@
                     Cadastre-se Grátis Agora! <i class="fas fa-arrow-right"></i>
                 </a>
             {% else %}
-                {# Usuário logado (não-Premium) é levado para o FORMULÁRIO DE CHECKOUT #}
+                {# Usuário logado (não-Premium) é levado para a ESCOLHA DE PLANOS #}
                 <form method="post" action="{% url 'choose_plan' %}" style="display: inline;"> 
                     {% csrf_token %}
                     <button type="submit" class="btn btn-warning btn-lg mt-3 fw-bold text-dark">
