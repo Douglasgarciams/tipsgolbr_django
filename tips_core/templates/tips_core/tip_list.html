@@ -36,39 +36,50 @@
         <h2 class="mb-4 text-light">Tips Gratuitas</h2>
 
         <div class="row">
-            {% for tip in tips %}
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="tip-card p-3 
-                        {% if tip.status == 'WIN' %}win{% elif tip.status == 'LOSS' %}loss{% else %}pending{% endif %}">
-                        
-                        <h5 class="fw-bold mb-3 text-light">
-                            <i class="fas fa-calendar-alt me-2"></i> 
-                            {{ tip.match_title }} <small class="text-muted">({{ tip.league }})</small>
-                        </h5>
-                        
-                        <p class="small text-light">Data: {{ tip.match_date|date:"d/m/Y H:i" }}</p>
-                        <hr class="my-2">
-                        <p class="text-light"><strong>🎯 Prognóstico:</strong> {{ tip.prediction }}</p>
-                        <p class="text-light">
-                            <strong>📊 Odd:</strong> 
-                            <span class="badge bg-primary fs-6">{{ tip.odd_value }}</span>
-                            | Status: <span class="fw-bold">{{ tip.get_status_display }}</span>
-                        </p>
-                        
-                        {% if tip.link_aposta %}
-                            {# O botão de aposta de tip deve usar POST para simular o checkout (escolha de planos) #}
-                            <form method="post" action="{% url 'choose_plan' %}" style="display: inline;"> 
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-success btn-sm w-100 mt-2">
-                                    Fazer Aposta Agora! <i class="fas fa-external-link-alt"></i>
-                                </button>
-                            </form>
-                        {% endif %}
+    {% for tip in tips %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="tip-card p-3 
+                {% if tip.status == 'WIN' %}win{% elif tip.status == 'LOSS' %}loss{% else %}pending{% endif %}">
+                
+                {# TÍTULO E LIGA #}
+                <h5 class="fw-bold mb-2 text-light">
+                    <i class="fas fa-futbol me-2 text-warning"></i> 
+                    {{ tip.match_title }} 
+                </h5>
+                {# CORRIGIDO: Adicionado text-light para a Liga/Competição #}
+                <span class="small text-light">{{ tip.league }}</span>
+                <hr class="my-2">
+                
+                {# DETALHES #}
+                <p class="small text-light mb-1">
+                    <i class="fas fa-calendar-alt me-2 text-info"></i> 
+                    Data: {{ tip.match_date|date:"d/m/Y H:i" }}
+                </p>
+                
+                <p class="text-light mb-3">
+                    <i class="fas fa-chart-line me-2 text-success"></i> 
+                    <strong>Prognóstico:</strong> {{ tip.prediction }}
+                </p>
 
-                    </div>
-                </div>
-            {% endfor %}
+                <p class="text-light mb-4">
+                    <span class="odd-badge">{{ tip.odd_value }}</span>
+                    Status: <span class="fw-bold">{{ tip.get_status_display }}</span>
+                </p>
+                
+                {% if tip.link_aposta %}
+                    {# Botão de aposta usa POST para simular o checkout #}
+                    <form method="post" action="{% url 'choose_plan' %}" style="display: inline;"> 
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-sm w-100 mt-2">
+                            Fazer Aposta Agora! <i class="fas fa-external-link-alt"></i>
+                        </button>
+                    </form>
+                {% endif %}
+
+            </div>
         </div>
+    {% endfor %}
+</div>
         <hr class="my-5">
     {% endif %}
     {# FIM DO BLOCO CONDICIONAL DAS TIPS GRATUITAS #}
