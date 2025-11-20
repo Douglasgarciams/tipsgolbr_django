@@ -1,6 +1,6 @@
 import os 
 from pathlib import Path
-import dj_database_url # Importa a biblioteca para ler a URL de conexão do PostgreSQL
+import dj_database_url # CORRIGIDO: Necessário para ler a URL de conexão do Render
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # LÊ a chave de segurança da variável de ambiente do Render
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-sua-chave-secreta-padrao')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-wxis=7n6roizne*%)94#@s7qqz@^8l5180ww44p-&9397z@!k)')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # LÊ a variável DJANGO_DEBUG setada pelo Render. Em produção, será False.
@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     
     # Seus Apps
     'tips_core',
-    'widget_tweaks', # Mantido
+    'widget_tweaks', 
     # REMOVIDO: 'django_crontab' - Incompatível com o ambiente Render
 ]
 
@@ -87,7 +87,8 @@ if os.environ.get('DATABASE_URL'):
     DATABASES['default'] = dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
-        conn_health_check=True,
+        # CORRIGIDO: O argumento correto é 'conn_health_checks' (plural)
+        conn_health_checks=True, 
     )
 
 
