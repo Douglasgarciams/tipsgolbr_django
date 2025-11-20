@@ -1,32 +1,30 @@
-import os 
+import os
 from pathlib import Path
-import dj_database_url # CORRIGIDO: Necessário para ler a URL de conexão do Render
+import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# SECRET KEY
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-wxis=7n6roizne*%)94#@s7qqz@^8l5180ww44p-&9397z@!k)'
+)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# LÊ a chave de segurança da variável de ambiente do Render
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-wxis=7n6roizne*%)94#@s7qqz@^8l5180ww44p-&9397z@!k)')
+# DEBUG: False em produção
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# LÊ a variável DJANGO_DEBUG setada pelo Render. Em produção, será False.
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+# ALLOWED_HOSTS
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'tipsgolbr-django.onrender.com',
+]
 
-# ALLOWED_HOSTS: Aceita o domínio do Render (resolve o DisallowedHost).
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-
-# Adiciona o hostname do Render, que é 'tipsgolbr-django.onrender.com'
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-    
-ALLOWED_HOSTS.append('tipsgolbr-django.onrender.com') 
 
-
-# Application definition
-
+# APPS
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -34,17 +32,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
-    # Seus Apps
+
+    # Apps do projeto
     'tips_core',
-    'widget_tweaks', 
-    # REMOVIDO: 'django_crontab' - Incompatível com o ambiente Render
+    'widget_tweaks',
 ]
 
 AUTH_USER_MODEL = 'tips_core.CustomUser'
 
+# MIDDLEWARE
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ESSENCIAL PARA O RENDER
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -55,10 +54,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'tipsgolbr_config.urls'
 
+# TEMPLATES
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [],  # Use templates dentro dos apps
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -72,9 +72,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'tipsgolbr_config.wsgi.application'
 
-
-# Database
-# CONFIGURAÇÃO FINAL DO BANCO DE DADOS (SQLite para dev, PostgreSQL para prod)
+# DATABASE
+# Desenvolvimento local: SQLite
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -82,57 +81,43 @@ DATABASES = {
     }
 }
 
-# Se a variável DATABASE_URL existir (no Render), use PostgreSQL
+# Produção: PostgreSQL do Render
 if os.environ.get('DATABASE_URL'):
     DATABASES['default'] = dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
-        # CORRIGIDO: O argumento correto é 'conn_health_checks' (plural)
-        conn_health_checks=True, 
+        conn_health_checks=True,
     )
 
-
-# Password validation
+# PASSWORDS
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
-# Internationalization
+# INTERNACIONALIZAÇÃO
 LANGUAGE_CODE = 'pt-br'
-
 TIME_ZONE = 'America/Sao_Paulo'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# CONFIGURAÇÃO DE STATIC FINAL PARA PRODUÇÃO
+# STATIC FILES
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Só mantenha essa linha se essa pasta realmente EXISTIR
 STATICFILES_DIRS = [
-    BASE_DIR / 'tips_core/static', 
+    BASE_DIR / 'tips_core/static',
 ]
 
-
-# Default primary key field type
+# DEFAULT PK
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# Configurações de Autenticação
+# LOGIN CONFIG
 LOGIN_REDIRECT_URL = 'home'
-LOGIN_URL = 'login' 
+LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'home'
