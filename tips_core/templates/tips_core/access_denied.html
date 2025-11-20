@@ -12,16 +12,16 @@
                 <hr>
                 
                 {% if user.is_authenticated %}
-                    <p class="mb-3">Você está logado como **{{ user.username }}**, mas seu status Premium está inativo.</p>
-                    
-                    {# CORREÇÃO: Usamos um link GET que leva à rota principal do Premium. Essa rota deve direcionar o usuário para a página de pagamento. #}
-                    <a href="{% url 'premium_link' %}" class="btn btn-warning btn-lg me-2">
-                        Assine o Plano Premium Agora! 👑
-                    </a>
-                    
-                {% else %}
-                    <p class="mb-3">Por favor, faça <a href="{% url 'login' %}" class="text-warning">login</a> ou <a href="{% url 'register' %}" class="text-warning">cadastre-se</a>.</p>
-                {% endif %}
+    <p class="mb-3">Você está logado como **{{ user.username }}**, mas seu status Premium está inativo.</p>
+    
+    {# CORREÇÃO: O botão deve ser um link (<a>) que aponta para a rota de ESCOLHA DE PLANOS #}
+    <a href="{% url 'choose_plan' %}" class="btn btn-warning btn-lg me-2">
+        Assine o Plano Premium Agora! 👑
+    </a>
+
+{% else %}
+    <p class="mb-3">Por favor, faça <a href="{% url 'login' %}" class="text-warning">login</a> ou <a href="{% url 'register' %}" class="text-warning">cadastre-se</a>.</p>
+{% endif %}
 
                 <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg mt-3">Voltar para a página inicial</a>
             </div>
