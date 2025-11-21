@@ -14,14 +14,13 @@
             </p>
             {% if not user.is_authenticated %}
                 <a href="{% url 'register' %}" class="btn btn-warning btn-lg mt-3 fw-bold text-dark me-3">
-                    Cadastre-se Grátis Agora! <i class="fas fa-arrow-right"></i>
+                    Cadastre-se Grátis Agora! <i class="fa fa-arrow-right"></i>
                 </a>
             {% else %}
-                {# Usuário logado (não-Premium) é levado para a ESCOLHA DE PLANOS #}
                 <form method="post" action="{% url 'choose_plan' %}" style="display: inline;"> 
                     {% csrf_token %}
                     <button type="submit" class="btn btn-warning btn-lg mt-3 fw-bold text-dark">
-                        Ver Tips Premium <i class="fas fa-crown"></i>
+                        Ver Tips Premium <i class="fa fa-crown"></i>
                     </button>
                 </form>
             {% endif %}
@@ -36,92 +35,140 @@
         <h2 class="mb-4 text-light">Tips Gratuitas</h2>
 
         <div class="row">
-    {% for tip in tips %}
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="tip-card p-3 
-                {% if tip.status == 'WIN' %}win{% elif tip.status == 'LOSS' %}loss{% else %}pending{% endif %}">
-                
-                {# TÍTULO E LIGA #}
-                <h5 class="fw-bold mb-2 text-light">
-                    <i class="fas fa-futbol me-2 text-warning"></i> 
-                    {{ tip.match_title }} 
-                </h5>
-                {# CORRIGIDO: Adicionado text-light para a Liga/Competição #}
-                <span class="small text-light">{{ tip.league }}</span>
-                <hr class="my-2">
-                
-                {# DETALHES #}
-                <p class="small text-light mb-1">
-                    <i class="fas fa-calendar-alt me-2 text-info"></i> 
-                    Data: {{ tip.match_date|date:"d/m/Y H:i" }}
-                </p>
-                
-                <p class="text-light mb-3">
-                    <i class="fas fa-chart-line me-2 text-success"></i> 
-                    <strong>Prognóstico:</strong> {{ tip.prediction }}
-                </p>
+            {% for tip in tips %}
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3"> 
+                    <div class="tip-card p-2 
+                        {% if tip.status == 'WIN' %}win{% elif tip.status == 'LOSS' %}loss{% else %}pending{% endif %}">
+                        
+                        {# TÍTULO E LIGA #}
+                        <h6 class="fw-bold mb-1 text-light">
+                            <i class="fa fa-futbol me-2 text-warning"></i> 
+                            {{ tip.match_title }} 
+                        </h6>
+                        <span class="small text-light">{{ tip.league }}</span>
+                        <hr class="my-1">
+                        
+                        {# DETALHES #}
+                        <p class="small text-light mb-1">
+                            <i class="fa fa-calendar-alt me-2 text-info"></i> 
+                            Data: {{ tip.match_date|date:"d/m/Y H:i" }}
+                        </p>
+                        
+                        <p class="text-light mb-1">
+                            <i class="fa fa-bullseye me-2 text-success"></i> 
+                            <strong>Prognóstico:</strong> {{ tip.prediction }}
+                        </p>
 
-                <p class="text-light mb-4">
-                    <strong>Odd (Cotação):</strong>
-                    <span class="odd-badge">{{ tip.odd_value }}</span>
-                    Status: <span class="fw-bold">{{ tip.get_status_display }}</span>
-                </p>
-                
-                {% if tip.link_aposta %}
-                    {# Botão de aposta usa POST para simular o checkout #}
-                    <form method="post" action="{% url 'choose_plan' %}" style="display: inline;"> 
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success btn-sm w-100 mt-2">
-                            Fazer Aposta Agora! <i class="fas fa-external-link-alt"></i>
-                        </button>
-                    </form>
-                {% endif %}
+                        <p class="text-light mb-2">
+                            <strong>Odd:</strong> 
+                            <span class="odd-badge">{{ tip.odd_value }}</span>
+                            Status: <span class="fw-bold">{{ tip.get_status_display }}</span>
+                        </p>
+                        
+                        {# NOVOS CAMPOS FINANCEIROS #}
+                        {% if tip.resultado_final %}
+                        <p class="small text-light mb-1">
+                            <i class="fa fa-trophy me-2 text-warning"></i> 
+                            <strong>Resultado:</strong> {{ tip.resultado_final }}
+                        </p>
+                        {% endif %}
 
-            </div>
+                        <p class="small text-light mb-1">
+                            <i class="fa fa-coins me-2 text-info"></i> 
+                            <strong>Aposta:</strong> R$ {{ tip.valor_aposta }}
+                        </p>
+                        {% if tip.valor_ganho %}
+                        <p class="small text-light mb-1">
+                            <i class="fa fa-arrow-up me-2 text-success"></i> 
+                            <strong>Ganho:</strong> R$ {{ tip.valor_ganho }}
+                        </p>
+                        {% endif %}
+                        {% if tip.valor_perda %}
+                        <p class="small text-light mb-2">
+                            <i class="fa fa-arrow-down me-2 text-danger"></i> 
+                            <strong>Perda:</strong> R$ {{ tip.valor_perda }}
+                        </p>
+                        {% endif %}
+
+                        {# Botão de Aposta #}
+                        {% if tip.link_aposta %}
+                            <form method="post" action="{% url 'choose_plan' %}" style="display: inline;"> 
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm w-100 mt-auto">
+                                    Fazer Aposta Agora! <i class="fa fa-external-link-alt"></i>
+                                </button>
+                            </form>
+                        {% endif %}
+
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-    {% endfor %}
-</div>
         <hr class="my-5">
     {% endif %}
     {# FIM DO BLOCO CONDICIONAL DAS TIPS GRATUITAS #}
 
     
-    {# --- BLOCO DE NOTÍCIAS (SEÇÃO 2) --- #}
+    {# --- BLOCO DE NOTÍCIAS (SEÇÃO 2: LAYOUT DE CARDS VERTICAIS + LISTA LATERAL) --- #}
     {% if noticias %}
     <div class="row mb-5">
         <h2 class="text-light fw-bold mb-4 border-bottom pb-2">Últimas Notícias e Análises</h2>
-        {% for noticia in noticias %}
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="tip-card p-3 shadow-lg d-flex flex-column" style="height: 100%;">
-                    
-                    {# BLOCO: EXIBIÇÃO DA IMAGEM DE CAPA COM FALLBACK #}
-                    <div class="mb-3 rounded overflow-hidden">
-                        {% if noticia.imagem_url %}
-                            <img src="{{ noticia.imagem_url }}" class="img-fluid" alt="{{ noticia.titulo }}" style="object-fit: cover; height: 180px; width: 100%;">
-                        {% else %}
-                            <div class="placeholder-img">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                        {% endif %}
+
+        {# COLUNA ESQUERDA: 8 COLUNAS PARA OS CARDS VERTICAIS #}
+        <div class="col-lg-8 mb-4">
+            {# Define o número de notícias verticais (Ajuste "4" para o número que desejar) #}
+            {% for noticia in noticias|slice:":4" %}
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="tip-card p-3 shadow-lg d-flex flex-row" style="height: 100%;">
+                        
+                        {# IMAGEM MINIATURA (20% da largura do card) #}
+                        <div class="me-3 rounded overflow-hidden flex-shrink-0" style="width: 150px;">
+                            {% if noticia.imagem_url %}
+                                <img src="{{ noticia.imagem_url }}" class="img-fluid" alt="{{ noticia.titulo }}" 
+                                    style="object-fit: cover; height: 100px; width: 150px;">
+                            {% else %}
+                                <div class="placeholder-img d-flex align-items-center justify-content-center" style="height: 100px; width: 150px;">
+                                    <i class="fa fa-chart-bar fa-2x"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {# CONTEÚDO (Restante da largura) #}
+                        <div class="flex-grow-1 d-flex flex-column">
+                            <h6 class="text-warning fw-bold mb-1">{{ noticia.data_publicacao|date:"d/m H:i" }}</h6>
+                            <h5 class="text-light mb-2">{{ noticia.titulo }}</h5>
+                            
+                            {# RESUMO COMPACTO #}
+                            <p class="small text-light mb-3 flex-grow-1" style="overflow: hidden;">
+                                {{ noticia.resumo|safe|truncatechars:180 }}
+                            </p>
+                            
+                            {# BOTÃO NO RODAPÉ #}
+                            <a href="{{ noticia.fonte_url }}" target="_blank" class="btn btn-sm btn-outline-info align-self-start">
+                                Ler Análise Completa <i class="fa fa-external-link-alt"></i>
+                            </a>
+                        </div>
                     </div>
-                    
-                    <h6 class="text-warning fw-bold mb-2">{{ noticia.data_publicacao|date:"d/m H:i" }}</h6>
-                    
-                    {# TÍTULO DA MATÉRIA #}
-                    <h5 class="text-light">{{ noticia.titulo }}</h5>
-                    
-                    {# RESUMO RESTRITO: Limita o texto para 2-3 linhas e remove o HTML de poluição #}
-                    <p class="small text-light mb-3 flex-grow-1" style="height: 80px; overflow: hidden;">
-                        {{ noticia.resumo|safe|truncatechars:180 }} 
-                    </p>
-                    
-                    {# LINK LIMPO: O link de fonte é canalizado apenas para o botão #}
-                    <a href="{{ noticia.fonte_url }}" target="_blank" class="btn btn-sm btn-outline-info w-100 mt-auto">
-                        Ler Análise Completa <i class="fas fa-external-link-alt"></i>
-                    </a>
                 </div>
             </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
+        
+        {# COLUNA DIREITA: 4 COLUNAS PARA A LISTA LATERAL #}
+        <div class="col-lg-4 mb-4">
+            <div class="tip-card p-3 shadow-lg" style="height: 100%;">
+                <h5 class="text-light mb-3 border-bottom pb-2">Outras Notícias (Lista)</h5>
+                {% for noticia in noticias|slice:"4:" %} {# Começa do 5º item (índice 4) em diante #}
+                    <a href="{{ noticia.fonte_url }}" target="_blank" class="d-block text-decoration-none mb-3 border-bottom pb-2">
+                        <h6 class="small text-light mb-1">{{ noticia.titulo|truncatechars:80 }}</h6>
+                        <span class="small text-warning">{{ noticia.data_publicacao|date:"d/m H:i" }}</span>
+                    </a>
+                {% empty %}
+                    <p class="text-secondary small">Nenhuma outra notícia disponível.</p>
+                {% endfor %}
+            </div>
+        </div>
     </div>
     <hr class="my-5">
     {% endif %}
@@ -133,14 +180,13 @@
         
         {% if user.is_premium_member %}
             <a href="{% url 'premium_tips_content' %}" class="btn btn-primary btn-lg mt-3">
-                Ver Conteúdo Premium <i class="fas fa-lock-open"></i>
+                Ver Conteúdo Premium <i class="fa fa-lock-open"></i>
             </a>
         {% else %}
-            {# Botão CTA final aponta para a escolha de planos #}
             <form method="post" action="{% url 'choose_plan' %}" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-warning btn-lg mt-3 fw-bold text-dark">
-                    Assinar Premium Agora! <i class="fas fa-crown"></i>
+                    Assinar Premium Agora! <i class="fa fa-crown"></i>
                 </button>
             </form>
         {% endif %}

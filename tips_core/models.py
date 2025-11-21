@@ -1,9 +1,7 @@
-# tips_core/models.py
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings 
-from django.db.models.signals import post_save # <<< CORRIGIDO: Importação para Signals
+from django.db.models.signals import post_save 
 
 # --- 1. MODELO DE USUÁRIO CUSTOMIZADO ---
 class CustomUser(AbstractUser):
@@ -69,6 +67,38 @@ class Tip(models.Model):
     prediction = models.TextField(verbose_name='Prognóstico (Ex: Over 2.5, Casa vence)')
     odd_value = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Odd (Cotação)')
     
+    # NOVO: Resultado Final (ex: 2-1)
+    resultado_final = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True, 
+        verbose_name='Resultado Final'
+    )
+    
+    # NOVO: Valor da Aposta (Stake)
+    valor_aposta = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.00, 
+        verbose_name='Valor da Aposta (Stake)'
+    )
+    
+    # NOVO: Valor Ganho (Lucro)
+    valor_ganho = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.00, 
+        verbose_name='Valor Ganho (Lucro)'
+    )
+    
+    # NOVO: Valor Perda (Prejuízo)
+    valor_perda = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.00, 
+        verbose_name='Valor Perda (Prejuízo)'
+    )
+
     link_aposta = models.URLField(
         max_length=500, 
         blank=True, 
@@ -140,7 +170,7 @@ class Assinatura(models.Model):
         return f"Assinatura de {self.user.username} - Ativa: {self.is_active}"
 
 # ----------------------------------------------------------------
-# --- CORREÇÃO FINAL: LOGICA DE SINCRONIZAÇÃO VIA SIGNALS ---
+# --- LOGICA DE SINCRONIZAÇÃO VIA SIGNALS ---
 # ----------------------------------------------------------------
 
 def sync_premium_status(sender, instance, **kwargs):

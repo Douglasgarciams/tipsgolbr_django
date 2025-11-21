@@ -12,22 +12,29 @@
     <title>TipsGolBR | {% block title %}{% endblock %}</title>
     
     <style>
-    /* Cores Base do Site Escuro */
-    :root {
-        --cor-fundo: #0c0c0c; 
-        --cor-primaria: #ffc107; /* Amarelo Destaque */
-        --cor-fundo-card: rgba(31, 31, 31, 0.9);
-        --cor-borda: #e7d90b; 
-    }
-    
-    /* Estilos Globais */
-    body { 
-        padding-top: 80px;
-        font-family: 'Poppins', sans-serif;
-        color: #f8f9fa; 
-        background-color: var(--cor-fundo);
-        /* ... (Background image styles) ... */
-    }
+        /* Cores Base do Site Escuro */
+        :root {
+            --cor-fundo: #0c0c0c; 
+            --cor-primaria: #ffc107; /* Amarelo Destaque */
+            --cor-fundo-card: rgba(31, 31, 31, 0.9);
+            --cor-borda: #444; /* Cinza suave e elegante */
+        }
+        
+        /* Estilos Globais */
+        body { 
+            padding-top: 80px;
+            font-family: 'Poppins', sans-serif;
+            color: #f8f9fa; 
+            background-color: var(--cor-fundo);
+            
+            /* EFEITO IMPACTANTE DE FUNDO COM IMAGEM */
+            background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
+                              url("{% static 'tips_core/img/fundo_aposta.jpg' %}"); 
+            background-size: cover; 
+            background-position: center center; 
+            background-attachment: fixed; 
+            background-repeat: no-repeat;
+        }
         
         /* Navbar e Componentes */
         .navbar {
@@ -38,57 +45,58 @@
         .text-warning { color: var(--cor-primaria) !important; }
 
         /* Componentes de Fundo Escuro Semitransparente (Cards) */
-    .card, .alert, .bg-white, .hero-section-card { 
-        background-color: var(--cor-fundo-card) !important; 
-        color: #fff !important; 
-        border: 1px solid var(--cor-borda);
+        .card, .alert, .bg-white, .hero-section-card { 
+            background-color: var(--cor-fundo-card) !important; 
+            color: #fff !important; 
+            border: 1px solid #333;
         }
         .hero-section { background-color: transparent !important; }
 
         /* Estilo dos Cards de Tips (Tips Gratuitas e Premium) */
-    .tip-card { 
-        padding: 20px; 
-        margin-bottom: 20px; 
-        border-radius: 12px;
-        transition: transform 0.3s ease;
-        box-shadow: 0 6px 15px rgba(226, 14, 14, 0.4); 
-        border: 1px solid var(--cor-borda); 
-        background-color: var(--cor-fundo-card); /* Garante que o fundo seja o correto */
-    }
+        .tip-card { 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+            /* Sombras ajustadas para serem suaves e pretas */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4); 
+            border: 1px solid var(--cor-borda); 
+            background-color: var(--cor-fundo-card); 
+        }
         .tip-card:hover {
             transform: translateY(-5px); 
-            box-shadow: 0 10px 20px rgba(2, 50, 153, 0.6);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
         }
 
-        /* Cores de Status no Fundo Escuro */
-    /* Foco na borda de cor, não no fundo */
-    .win { border-left: 6px solid #28a745; } 
-    .loss { border-left: 6px solid #dc3545; } 
-    .pending { border-left: 6px solid #ffc107; } 
+        /* Cores de Status no Fundo Escuro (Apenas a barra lateral) */
+        .win { border-left: 6px solid #28a745; } 
+        .loss { border-left: 6px solid #dc3545; } 
+        .pending { border-left: 6px solid #ffc107; } 
 
-    /* NOVO: Estilo para o badge da Odd (Mais destacado e limpo) */
-    .odd-badge {
-        font-size: 1.1rem;
-        padding: 5px 10px;
-        border-radius: 6px;
-        background-color: #007bff; 
-        color: white;
-        font-weight: 700;
-        margin-right: 10px;
-    }
+        /* NOVO: Estilo para placeholder de imagem */
+        .placeholder-img {
+            background-color: #2c2c2c; 
+            height: 180px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            color: #ffc107; 
+            border-radius: 6px;
+        }
         
-        /* NOVO: Estilo para o badge da Odd (Mais destacado) */
+        /* NOVO: Estilo para o badge da Odd (Mais destacado e limpo) */
         .odd-badge {
             font-size: 1.1rem;
             padding: 5px 10px;
             border-radius: 6px;
-            background-color: #007bff; /* Azul primário */
+            background-color: #007bff; 
             color: white;
             font-weight: 700;
             margin-right: 10px;
         }
-
-
+        
         /* Botão Destaque */
         .btn-warning {
             background-color: var(--cor-primaria) !important;

@@ -11,7 +11,7 @@ SECRET_KEY = os.environ.get(
 )
 
 # DEBUG: False em produção
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+DEBUG = True
 
 # ALLOWED_HOSTS
 ALLOWED_HOSTS = [
