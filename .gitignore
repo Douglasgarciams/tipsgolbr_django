@@ -13,9 +13,6 @@ db.sqlite3
 *~
 .DS_Store
 
-# Ignore local migration files (Render will run its own)
-tips_core/migrations/0*
-
 # Configurações de IDEs
 .idea/
 .vscode/
