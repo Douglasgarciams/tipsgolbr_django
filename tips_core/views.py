@@ -15,17 +15,24 @@ from .forms import CustomUserCreationForm
 def public_tips_list(request):
     """
     Exibe a lista de tips gratuitas E as notícias na página principal.
-    Filtra as tips para serem exibidas APENAS se o usuário estiver logado E a aposta estiver ATIVA.
+    REGRAS DE VISIBILIDADE:
+    - Tips Gratuitas: Somente se o usuário estiver logado E aposta estiver ATIVA.
+    - Notícias: Somente se o usuário NÃO estiver logado.
     """
-    free_tips = None # Inicia como None
+    free_tips = None 
+    noticias_recentes = None # Inicia como None
 
-    # Filtra as tips gratuitas APENAS se o usuário estiver autenticado
-    if request.user.is_authenticated:
-        free_tips = Tip.objects.filter(access_level='FREE', is_active=True).order_by('-match_date')
+    # 1. VISUALIZAÇÃO PÚBLICA (Usuário NÃO logado)
+    if not request.user.is_authenticated:
+        # Busca as notícias APENAS para quem não está logado
+        noticias_recentes = Noticia.objects.all().order_by('-data_publicacao')[:12]
         
-    # CORREÇÃO: Aumentado o limite de notícias de 6 para 12
-    noticias_recentes = Noticia.objects.all().order_by('-data_publicacao')[:12]
-    
+    # 2. VISUALIZAÇÃO DE MEMBRO (Usuário logado)
+    else:
+        # Filtra as tips gratuitas (e ativas)
+        free_tips = Tip.objects.filter(access_level='FREE', is_active=True).order_by('-match_date')
+        # NOTÍCIAS FICAM COMO 'None' e não serão exibidas.
+        
     context = {
         'tips': free_tips,
         'noticias': noticias_recentes,
