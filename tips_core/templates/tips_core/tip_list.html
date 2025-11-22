@@ -56,7 +56,7 @@
                         
                         <p class="text-light mb-1">
                             <i class="fa fa-bullseye me-2 text-success"></i> 
-                            <strong>Prognóstico:</strong> {{ tip.prediction }}
+                            <strong>Método:</strong> {{ tip.get_method_display }} {# MODIFICAÇÃO AQUI #}
                         </p>
 
                         <p class="text-light mb-2">
@@ -89,7 +89,7 @@
                             <strong>Perda:</strong> R$ {{ tip.valor_perda }}
                         </p>
                         {% endif %}
-
+                        
                         {# BOTÃO DE OCULTAR (DESATIVAR) - SÓ PARA SUPERUSUÁRIOS #}
                         {% if user.is_superuser %}
                             <form method="post" action="{% url 'deactivate_tip' tip_id=tip.id %}" style="display: inline;" class="mb-2">
@@ -100,12 +100,14 @@
                             </form>
                         {% endif %}
 
-                        {# Botão de Aposta (AGORA É UM LINK DIRETO) #}
+
+                        {# Botão de Aposta (LINK DIRETO) #}
                         {% if tip.link_aposta %}
                             <a href="{{ tip.link_aposta }}" target="_blank" class="btn btn-success btn-sm w-100 mt-auto">
                                 Fazer Aposta Agora! <i class="fa fa-external-link-alt"></i>
                             </a>
                         {% endif %}
+
                     </div>
                 </div>
             {% endfor %}
@@ -147,13 +149,13 @@
                     
                     {# RESUMO COMPACTO #}
                     <p class="small text-light mb-3 flex-grow-1" style="overflow: hidden;">
-                        {{ noticia.resumo|striptags|truncatechars:180 }}
+                        {{ noticia.resumo|safe|truncatechars:180 }}
                     </p>
                     
                     {# LINK DE TEXTO AJUSTADO COM ALINHAMENTO CORRIGIDO #}
                     <a href="{{ noticia.fonte_url }}" target="_blank" class="text-info small text-decoration-none mt-2 d-flex align-items-center" style="line-height: 1;">
                         Ler Análise Completa 
-                        <i class="fa fa-external-link-alt ms-1" style="vertical-align: middle; position: relative; top: -2px;"></i>
+                        <i class="fa fa-external-link-alt ms-1 align-middle"></i>
                     </a>
                 </div>
             </div>

@@ -42,6 +42,25 @@ class CustomUser(AbstractUser):
 
 
 # --- DEFINIÇÕES DE ESCOLHAS ---
+
+# NOVO: Choices para o Método de Aposta
+METHOD_CHOICES = [
+    ('LAY0X1', 'LAY 0x1'),
+    ('LAY0X2', 'LAY 0x2'),
+    ('LAY0X3', 'LAY 0x3'),
+    ('LAY1X0', 'LAY 1x0'),
+    ('LAY2X0', 'LAY 2x0'),
+    ('LAY3X0', 'LAY 3x0'),
+    ('LAY2X2', 'LAY 2x2'),
+    ('LAYGC', 'LAY GOLEADA CASA'),
+    ('LAYGV', 'LAY GOLEADA VISITANTE'),
+    ('BACKC', 'BACK CASA'),
+    ('BACKV', 'BACK VISITANTE'),
+    ('OVER05HT', 'OVER 0.5 HT'),
+    ('OVER05FT', 'OVER 0.5 FT'),
+    ('OVER15FT', 'OVER 1.5 FT'),
+]
+
 STATUS_CHOICES = [
     ('PENDING', 'Pendente'),
     ('WIN', 'Ganho'),
@@ -64,10 +83,17 @@ class Tip(models.Model):
     league = models.CharField(max_length=100, verbose_name='Liga/Competição')
     match_date = models.DateTimeField(verbose_name='Data e Hora do Jogo')
 
-    prediction = models.TextField(verbose_name='Prognóstico (Ex: Over 2.5, Casa vence)')
+    # CAMPO MODIFICADO/NOVO: O campo 'prediction' foi substituído por 'method'
+    method = models.CharField(
+        max_length=10, 
+        choices=METHOD_CHOICES, 
+        default='LAY0X1',
+        verbose_name='Método de Aposta'
+    )
+    
     odd_value = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Odd (Cotação)')
     
-    # NOVO: Resultado Final (ex: 2-1)
+    # Resultado Final (ex: 2-1)
     resultado_final = models.CharField(
         max_length=100, 
         blank=True, 
@@ -75,14 +101,14 @@ class Tip(models.Model):
         verbose_name='Resultado Final'
     )
 
-    # NOVO CAMPO para controle de visibilidade
+    # Campo de controle de visibilidade (is_active)
     is_active = models.BooleanField(
         default=True, 
         verbose_name='Aposta Ativa/Visível',
         help_text='Desmarque para ocultar esta aposta do site (mas manter no histórico/gráfico).'
     )
     
-    # NOVO: Valor da Aposta (Stake)
+    # Valor da Aposta (Stake)
     valor_aposta = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -90,7 +116,7 @@ class Tip(models.Model):
         verbose_name='Valor da Aposta (Stake)'
     )
     
-    # NOVO: Valor Ganho (Lucro)
+    # Valor Ganho (Lucro)
     valor_ganho = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -98,7 +124,7 @@ class Tip(models.Model):
         verbose_name='Valor Ganho (Lucro)'
     )
     
-    # NOVO: Valor Perda (Prejuízo)
+    # Valor Perda (Prejuízo)
     valor_perda = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -132,7 +158,8 @@ class Tip(models.Model):
         verbose_name_plural = "Dicas de Apostas"
 
     def __str__(self):
-        return f"{self.match_title} - {self.prediction}"
+        # Agora retorna o valor legível do método
+        return f"{self.match_title} - {self.get_method_display()}" 
         
         
 # --- 3. MODELO DE NOTÍCIA ---
