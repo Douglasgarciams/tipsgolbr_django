@@ -26,4 +26,6 @@ urlpatterns = [
     
     # 3. Rota de Confirmação/Webhook (Chamada pelo PagBank no mundo real)
     path('checkout/confirmar/<str:username>/', views.confirm_payment, name='confirm_payment'),
+
+    path('desativar-tip/<int:tip_id>/', views.deactivate_tip, name='deactivate_tip'),
 ]

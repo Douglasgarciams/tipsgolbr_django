@@ -90,6 +90,14 @@
                         </p>
                         {% endif %}
 
+                        {# BOTÃO DE OCULTAR (DESATIVAR) - NOVO #}
+                        <form method="post" action="{% url 'deactivate_tip' tip_id=tip.id %}" style="display: inline;" class="mb-2">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary btn-sm w-100">
+                                Ocultar Aposta <i class="fa fa-eye-slash"></i>
+                            </button>
+                        </form>
+
                         {# Botão de Aposta #}
                         {% if tip.link_aposta %}
                             <form method="post" action="{% url 'choose_plan' %}" style="display: inline;"> 

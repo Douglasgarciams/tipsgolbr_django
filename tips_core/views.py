@@ -18,8 +18,9 @@ def public_tips_list(request):
     free_tips = None # Inicia como None
 
     # Filtra as tips gratuitas APENAS se o usuário estiver autenticado
+    # E apenas se a aposta estiver marcada como ativa (is_active=True)
     if request.user.is_authenticated:
-        free_tips = Tip.objects.filter(access_level='FREE').order_by('-match_date')
+        free_tips = Tip.objects.filter(access_level='FREE', is_active=True).order_by('-match_date')
         
     # CORREÇÃO: Aumentado o limite de notícias de 6 para 12
     noticias_recentes = Noticia.objects.all().order_by('-data_publicacao')[:12]
@@ -30,6 +31,30 @@ def public_tips_list(request):
         'title': 'Tips e Análises do Dia' 
     }
     return render(request, 'tips_core/tip_list.html', context)
+
+
+def deactivate_tip(request, tip_id):
+    """
+    Muda o status 'is_active' de uma aposta para False (oculta), 
+    mantendo-a no banco de dados para o histórico de desempenho.
+    """
+    # É crucial que o método seja POST para segurança
+    if request.method == 'POST':
+        try:
+            # 1. Busca a aposta pelo ID (pk)
+            tip = get_object_or_404(Tip, pk=tip_id)
+            
+            # 2. Desativa a aposta
+            tip.is_active = False
+            tip.save()
+            messages.success(request, f"Aposta '{tip.match_title}' ocultada com sucesso (mantida no histórico).")
+            
+        except Exception as e:
+            messages.error(request, f"Erro ao ocultar aposta: {e}")
+            
+    # Redireciona de volta para a página inicial (ou para onde for mais útil)
+    return redirect('home')
+
 
 def access_denied(request):
     """
@@ -84,7 +109,7 @@ def premium_tips(request):
         messages.error(request, "Você precisa ser um membro Premium para acessar este conteúdo.")
         return redirect('access_denied')
         
-    premium_tips = Tip.objects.filter(access_level='PREMIUM').order_by('-match_date')
+    premium_tips = Tip.objects.filter(access_level='PREMIUM', is_active=True).order_by('-match_date')
     
     return render(request, 'tips_core/premium_tips.html', {
         'title': 'Tips Premium Exclusivas',
