@@ -61,7 +61,7 @@
 
                         <p class="text-light mb-2">
                             <strong>Odd:</strong> 
-                            <span class="odd-badge">{{ tip.odd_value }}</span>
+                            <span class="odd-badge">{{ tip.odd_value|floatformat:0 }}</span>
                             Status: <span class="fw-bold">{{ tip.get_status_display }}</span>
                         </p>
                         
