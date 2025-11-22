@@ -5,7 +5,9 @@ from django.contrib import messages
 from datetime import datetime, timedelta 
 import pytz 
 from django.contrib.auth import get_user_model, update_session_auth_hash 
-from .models import Tip, Noticia, Assinatura 
+# IMPORTAÇÕES ESSENCIAIS PARA O CÁLCULO DE ANÁLISE
+from django.db.models import Sum, Count, F, Case, When, DecimalField 
+from .models import Tip, Noticia, Assinatura, METHOD_CHOICES 
 from .forms import CustomUserCreationForm 
 
 # --- VIEWS DE CONTEÚDO ---
@@ -13,12 +15,11 @@ from .forms import CustomUserCreationForm
 def public_tips_list(request):
     """
     Exibe a lista de tips gratuitas E as notícias na página principal.
-    As Tips Gratuitas são exibidas SOMENTE se o usuário estiver logado.
+    Filtra as tips para serem exibidas APENAS se o usuário estiver logado E a aposta estiver ATIVA.
     """
     free_tips = None # Inicia como None
 
     # Filtra as tips gratuitas APENAS se o usuário estiver autenticado
-    # E apenas se a aposta estiver marcada como ativa (is_active=True)
     if request.user.is_authenticated:
         free_tips = Tip.objects.filter(access_level='FREE', is_active=True).order_by('-match_date')
         
@@ -38,8 +39,8 @@ def deactivate_tip(request, tip_id):
     Muda o status 'is_active' de uma aposta para False (oculta), 
     mantendo-a no banco de dados para o histórico de desempenho.
     """
-    # É crucial que o método seja POST para segurança
-    if request.method == 'POST':
+    # É crucial que o método seja POST para segurança E que seja um superusuário.
+    if request.method == 'POST' and request.user.is_superuser:
         try:
             # 1. Busca a aposta pelo ID (pk)
             tip = get_object_or_404(Tip, pk=tip_id)
@@ -61,6 +62,75 @@ def access_denied(request):
     Página de acesso negado.
     """
     return render(request, 'tips_core/access_denied.html', {})
+
+
+# --- VIEW DE ANÁLISE DE DESEMPENHO (Cálculo Corrigido) ---
+
+@login_required
+def analysis_dashboard(request):
+    """
+    Calcula e exibe o resumo de ganhos e perdas por Método de Aposta.
+    """
+    
+    # 1. Filtra apenas as apostas CONCLUÍDAS (WIN, LOSS)
+    concluded_tips = Tip.objects.filter(status__in=['WIN', 'LOSS'])
+    
+    # 2. Define o Lucro Líquido
+    # CORREÇÃO APLICADA: SE WIN, usa F('valor_ganho') (o lucro líquido já registrado)
+    net_profit_case = Case(
+        When(status='WIN', then=F('valor_ganho')), # <-- CORREÇÃO AQUI
+        When(status='LOSS', then=F('valor_perda') * -1), 
+        default=0,
+        output_field=DecimalField()
+    )
+
+    # 3. Agrupa as apostas por MÉTODO e calcula as métricas por grupo
+    summary_data = concluded_tips.values('method').annotate(
+        total_aposta=Sum('valor_aposta'),
+        lucro_liquido_total=Sum(net_profit_case),
+        total_apostas=Count('id'),
+        total_wins=Count(Case(When(status='WIN', then=1))),
+        total_losses=Count(Case(When(status='LOSS', then=1))),
+    ).order_by('-lucro_liquido_total')
+
+    # 4. CALCULA OS TOTAIS GLOBAIS DIRETAMENTE NO DATABASE
+    global_totals = concluded_tips.aggregate(
+        total_stakes=Sum('valor_aposta'),
+        total_net_profit=Sum(net_profit_case)
+    )
+
+    # 5. Formata os dados para o template e adiciona o nome legível do método
+    analysis_summary = []
+    method_dict = dict(METHOD_CHOICES)
+    
+    for item in summary_data:
+        # Garante que total_aposta não seja None ou zero antes de dividir
+        total_aposta_decimal = item['total_aposta']
+        lucro_liquido_total_decimal = item['lucro_liquido_total']
+        
+        if total_aposta_decimal and total_aposta_decimal != 0:
+            yield_percent = (lucro_liquido_total_decimal / total_aposta_decimal) * 100
+        else:
+            yield_percent = 0.0
+
+        analysis_summary.append({
+            'method_code': item['method'],
+            'method_name': method_dict.get(item['method'], 'Desconhecido'),
+            'total_aposta': item['total_aposta'],
+            'lucro_liquido_total': item['lucro_liquido_total'],
+            'total_apostas': item['total_apostas'],
+            'total_wins': item['total_wins'],
+            'total_losses': item['total_losses'],
+            'yield_percent': yield_percent
+        })
+
+    context = {
+        'title': 'Dashboard de Análise de Desempenho',
+        'summary': analysis_summary,
+        'global_stakes': global_totals.get('total_stakes') or 0,
+        'global_net_profit': global_totals.get('total_net_profit') or 0,
+    }
+    return render(request, 'tips_core/analysis_dashboard.html', context)
 
 
 # --- VIEWS DE AUTENTICAÇÃO E PREMIUM ---
@@ -109,6 +179,7 @@ def premium_tips(request):
         messages.error(request, "Você precisa ser um membro Premium para acessar este conteúdo.")
         return redirect('access_denied')
         
+    # AQUI: Filtro adicionado para garantir que só tips ativas (is_active=True) sejam mostradas
     premium_tips = Tip.objects.filter(access_level='PREMIUM', is_active=True).order_by('-match_date')
     
     return render(request, 'tips_core/premium_tips.html', {

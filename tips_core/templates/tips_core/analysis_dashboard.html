@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-light fw-bold mb-4 border-bottom pb-2">{{ title }}</h1>
+    <p class="text-secondary lead">Resumo de performance por método de aposta concluída (Ganhos e Perdas).</p>
+
+    {% if summary %}
+        <div class="table-responsive bg-dark rounded shadow-lg p-3">
+            <table class="table table-dark table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col" class="text-warning">Método</th>
+                        <th scope="col">Total Apostado (R$)</th>
+                        <th scope="col">Lucro Líquido (R$)</th>
+                        <th scope="col" class="text-success">Yield (%)</th>
+                        <th scope="col">Total Tips</th>
+                        <th scope="col">W/L</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in summary %}
+                    <tr>
+                        <td class="fw-bold text-warning">{{ item.method_name }}</td>
+                        <td>R$ {{ item.total_aposta|floatformat:2 }}</td>
+                        
+                        <td class="fw-bold 
+                            {% if item.lucro_liquido_total > 0 %}text-info{% elif item.lucro_liquido_total < 0 %}text-danger{% else %}text-secondary{% endif %}">
+                            R$ {{ item.lucro_liquido_total|floatformat:2 }}
+                        </td>
+                        
+                        <td class="fw-bold 
+                            {% if item.yield_percent > 0 %}text-success{% elif item.yield_percent < 0 %}text-danger{% else %}text-secondary{% endif %}">
+                            {{ item.yield_percent|floatformat:2 }}%
+                        </td>
+                        
+                        <td>{{ item.total_apostas }}</td>
+                        <td>{{ item.total_wins }} / {{ item.total_losses }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {# RESUMO GERAL (TOTALIZADOR) - USANDO VARIÁVEIS PRÉ-CALCULADAS #}
+        <div class="mt-4 p-3 bg-dark rounded shadow-lg">
+            <h5 class="text-light">Totais Globais (Apostas Concluídas)</h5>
+            <p class="lead fw-bold text-light">
+                Lucro Líquido Geral: 
+                <span class="{% if global_net_profit > 0 %}text-success{% elif global_net_profit < 0 %}text-danger{% else %}text-secondary{% endif %}">
+                    R$ {{ global_net_profit|floatformat:2 }}
+                </span>
+            </p>
+            <p class="text-secondary">Total Apostado: R$ {{ global_stakes|floatformat:2 }}</p>
+        </div>
+
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            Nenhum resultado de aposta (WIN/LOSS) concluído para gerar o resumo.
+        </div>
+    {% endif %}
+    
+    <div class="mt-5 text-center">
+        <a href="{% url 'home' %}" class="btn btn-warning btn-lg">Voltar para Tips Ativas</a>
+    </div>
+</div>
+
+<style>
+/* Estilo para garantir que o contêiner se ajuste bem em telas pequenas */
+.table-responsive {
+    overflow-x: auto;
+}
+</style>
+{% endblock content %}

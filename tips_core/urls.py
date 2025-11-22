@@ -9,6 +9,9 @@ urlpatterns = [
     path('acesso-negado/', views.access_denied, name='access_denied'),
     path('register/', views.register, name='register'),
     
+    # Rota de Análise de Desempenho (NOVA IMPLEMENTAÇÃO)
+    path('dashboard-analise/', views.analysis_dashboard, name='analysis_dashboard'),
+    
     # Rota do Botão 'Premium' no Navbar (Go-to-Premium)
     path('premium/', views.go_to_premium, name='premium_link'), 
     
@@ -20,12 +23,12 @@ urlpatterns = [
     # 1. Rota para a página de escolha de planos
     path('checkout/planos/', views.choose_plan, name='choose_plan'),
     
-    # 2. Rota de Simulação de Pagamento (Recebe o ID do Plano e Redireciona para o PagSeguro)
-    # Esta rota foi renomeada de 'simulate_checkout' para 'simulate_checkout_with_plan'
+    # 2. Rota de Simulação de Pagamento
     path('checkout/pagar/<int:plan_id>/', views.simulate_checkout_with_plan, name='simulate_checkout_with_plan'),
     
-    # 3. Rota de Confirmação/Webhook (Chamada pelo PagBank no mundo real)
+    # 3. Rota de Confirmação/Webhook
     path('checkout/confirmar/<str:username>/', views.confirm_payment, name='confirm_payment'),
 
+    # Rota de Ação de Desativação (Admin)
     path('desativar-tip/<int:tip_id>/', views.deactivate_tip, name='deactivate_tip'),
 ]
