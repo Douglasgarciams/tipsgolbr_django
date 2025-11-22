@@ -90,13 +90,15 @@
                         </p>
                         {% endif %}
 
-                        {# BOTÃO DE OCULTAR (DESATIVAR) - NOVO #}
-                        <form method="post" action="{% url 'deactivate_tip' tip_id=tip.id %}" style="display: inline;" class="mb-2">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-secondary btn-sm w-100">
-                                Ocultar Aposta <i class="fa fa-eye-slash"></i>
-                            </button>
-                        </form>
+                        {# BOTÃO DE OCULTAR (DESATIVAR) - SÓ PARA SUPERUSUÁRIOS #}
+                        {% if user.is_superuser %}
+                            <form method="post" action="{% url 'deactivate_tip' tip_id=tip.id %}" style="display: inline;" class="mb-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm w-100">
+                                    Ocultar Aposta (Admin) <i class="fa fa-eye-slash"></i>
+                                </button>
+                            </form>
+                        {% endif %}
 
                         {# Botão de Aposta #}
                         {% if tip.link_aposta %}
