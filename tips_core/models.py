@@ -74,6 +74,13 @@ class Tip(models.Model):
         null=True, 
         verbose_name='Resultado Final'
     )
+
+    # NOVO CAMPO para controle de visibilidade
+    is_active = models.BooleanField(
+        default=True, 
+        verbose_name='Aposta Ativa/Visível',
+        help_text='Desmarque para ocultar esta aposta do site (mas manter no histórico/gráfico).'
+    )
     
     # NOVO: Valor da Aposta (Stake)
     valor_aposta = models.DecimalField(
