@@ -1,17 +1,61 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{% endblock %}
 
 {% block content %}
-    {# HERO SECTION (O bloco de destaque) #}
-    <div class="row mb-5 pt-4">
-        <div class="col-12 text-center hero-section-card p-5 rounded shadow-sm">
-            <h1 class="display-5 fw-bold text-light">
-                Sua melhor Análise esportiva.
-            </h1>
-            <p class="lead text-light mt-3">
-                Faça parte do nossa comunidade VIP, análises de jogos diariamente.
-            </p>
+    {# HERO SECTION: CONTEÚDO PRINCIPAL DE DESTAQUE #}
+    <div class="row mb-5 pt-0">
+        <div class="col-12 text-center p-0"> 
+            
+            {# CONDICIONAL: SE O USUÁRIO NÃO ESTÁ LOGADO, MOSTRAR CARROSSEL #}
+            {% if not user.is_authenticated %}
+                {% if promo_banners %}
+                    {# CONTAINER FULL-WIDTH (COL-12) APLICANDO A REGRA DE ALTURA CURTA #}
+                    <div class="row justify-content-center pt-2 pb-2">
+                        <div class="col-12"> {# LARGURA TOTAL #}
+                            {# NOVO CONTÊINER CSS APLICADO AQUI #}
+                            <div id="promoCarousel" class="carousel slide promo-carousel-container" data-bs-ride="carousel" data-bs-interval="5000">
+                                <div class="carousel-inner h-100"> 
+                                    {% for banner in promo_banners %}
+                                        <div class="carousel-item active h-100 {% if forloop.first %}active{% endif %}">
+                                            <a href="{{ banner.link_url }}" target="_blank" class="d-block h-100">
+                                                {# Imagem agora confia 100% no CSS Externo para preencher o espaço #}
+                                                <img src="{{ banner.imagem.url }}" alt="{{ banner.titulo }}">
+                                                <div class="carousel-caption d-none d-md-block text-start p-2 rounded">
+                                                    {% if banner.titulo %}
+                                                        <h5>{{ banner.titulo }}</h5>
+                                                    {% endif %}
+                                                    {% if banner.descricao %}<p>{{ banner.descricao }}</p>{% endif %}
+                                                </div>
+                                            </a>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if promo_banners|length > 1 %}
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Anterior</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Próximo</span>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    {# Fallback #}
+                    <h1 class="display-5 fw-bold text-light mt-4">Nenhuma promoção ativa no momento.</h1>
+                    <p class="lead text-light mt-3">Cadastre-se para ver as melhores tips!</p>
+                {% endif %}
+            {% else %}
+                {# Usuário logado #}
+                <h1 class="display-5 fw-bold text-light mt-4">Bem-vindo(a) de volta!</h1>
+                <p class="lead text-light mt-3">Acompanhe suas Tips e Análises Exclusivas!</p>
+            {% endif %}
+            
+            {# Botões de Cadastro/Ver Premium #}
             {% if not user.is_authenticated %}
                 <a href="{% url 'register' %}" class="btn btn-warning btn-lg mt-3 fw-bold text-dark me-3">
                     Cadastre-se Grátis Agora! <i class="fa fa-arrow-right"></i>
@@ -28,7 +72,6 @@
     </div>
     {# FIM HERO SECTION #}
 
-    
     {# --- NOVO POSICIONAMENTO: TIPS GRATUITAS (SEÇÃO 1) --- #}
     {% if user.is_authenticated %}
         
@@ -75,18 +118,18 @@
 
                         <p class="small text-light mb-1">
                             <i class="fa fa-coins me-2 text-info"></i> 
-                            <strong>Aposta:</strong> R$ {{ tip.valor_aposta }}
+                            <strong>Aposta:</strong> R$ {{ tip.valor_aposta|floatformat:2 }}
                         </p>
                         {% if tip.valor_ganho %}
                         <p class="small text-light mb-1">
                             <i class="fa fa-arrow-up me-2 text-success"></i> 
-                            <strong>Ganho:</strong> R$ {{ tip.valor_ganho }}
+                            <strong>Ganho:</strong> R$ {{ tip.valor_ganho|floatformat:2 }}
                         </p>
                         {% endif %}
                         {% if tip.valor_perda %}
                         <p class="small text-light mb-2">
                             <i class="fa fa-arrow-down me-2 text-danger"></i> 
-                            <strong>Perda:</strong> R$ {{ tip.valor_perda }}
+                            <strong>Perda:</strong> R$ {{ tip.valor_perda|floatformat:2 }}
                         </p>
                         {% endif %}
                         

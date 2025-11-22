@@ -7,35 +7,39 @@ import pytz
 from django.contrib.auth import get_user_model, update_session_auth_hash 
 # IMPORTAÇÕES ESSENCIAIS PARA O CÁLCULO DE ANÁLISE
 from django.db.models import Sum, Count, F, Case, When, DecimalField 
-from .models import Tip, Noticia, Assinatura, METHOD_CHOICES 
+from .models import Tip, Noticia, Assinatura, METHOD_CHOICES, PromocaoBanner
 from .forms import CustomUserCreationForm 
 
 # --- VIEWS DE CONTEÚDO ---
 
 def public_tips_list(request):
     """
-    Exibe a lista de tips gratuitas E as notícias na página principal.
+    Exibe a lista de tips gratuitas E as notícias/banners na página principal.
     REGRAS DE VISIBILIDADE:
     - Tips Gratuitas: Somente se o usuário estiver logado E aposta estiver ATIVA.
-    - Notícias: Somente se o usuário NÃO estiver logado.
+    - Notícias/Banners de Promoção: Somente se o usuário NÃO estiver logado.
     """
     free_tips = None 
-    noticias_recentes = None # Inicia como None
+    noticias_recentes = None
+    promo_banners = None # Nova variável para os banners
 
     # 1. VISUALIZAÇÃO PÚBLICA (Usuário NÃO logado)
     if not request.user.is_authenticated:
         # Busca as notícias APENAS para quem não está logado
         noticias_recentes = Noticia.objects.all().order_by('-data_publicacao')[:12]
+        # Busca os banners ativos (e os ordena)
+        promo_banners = PromocaoBanner.objects.filter(ativo=True).order_by('ordem')
         
     # 2. VISUALIZAÇÃO DE MEMBRO (Usuário logado)
     else:
         # Filtra as tips gratuitas (e ativas)
         free_tips = Tip.objects.filter(access_level='FREE', is_active=True).order_by('-match_date')
-        # NOTÍCIAS FICAM COMO 'None' e não serão exibidas.
+        # Notícias e banners ficam como 'None' e não serão exibidos.
         
     context = {
         'tips': free_tips,
         'noticias': noticias_recentes,
+        'promo_banners': promo_banners, # Adicione os banners ao contexto
         'title': 'Tips e Análises do Dia' 
     }
     return render(request, 'tips_core/tip_list.html', context)

@@ -1,10 +1,10 @@
-# tipsgolbr_config/urls.py (Versão Corrigida - COM CONFIGURAÇÃO DE ESTÁTICOS)
+# tipsgolbr_config/urls.py (Versão Corrigida - SEM CARACTERES ESPECIAIS)
 
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings      # Importa settings
+from django.conf import settings # Importa settings
 from django.conf.urls.static import static # Importa static helper
-from django.conf import settings # Pode ser redundante, mas é seguro ter certeza
+# Não é necessário importar settings de novo
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -12,10 +12,10 @@ urlpatterns = [
     path('', include('tips_core.urls')), 
 ]
 
-# --- CONFIGURAÇÃO DE ARQUIVOS ESTÁTICOS (SOMENTE EM DEBUG=True) ---
+# --- CONFIGURAÇÃO DE ARQUIVOS ESTÁTICOS E MÍDIA (SOMENTE EM DEBUG=True) ---
 if settings.DEBUG:
-    # Adiciona a rota para servir arquivos estáticos (CSS, JS, Imagens)
-    # A variável BASE_DIR precisa ser importada/definida no settings.py
+    # Adiciona a rota para servir arquivos estáticos (CSS, JS, etc.)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) 
     
-    # Nota: Não é necessário mais nada aqui.
+    # ADICIONA ROTA PARA SERVIR ARQUIVOS DE MÍDIA (Imagens do Carrossel)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

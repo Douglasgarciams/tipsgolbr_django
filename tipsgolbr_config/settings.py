@@ -32,7 +32,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.humanize',
+    'django.contrib.humanize', # Adicionado para filtros de template
+    'django.contrib.sitemaps', # Se você estiver usando para sitemaps, senão remova
+    # ... (Se houver outros apps de contrib, mantenha-os)
 
     # Apps do projeto
     'tips_core',
@@ -59,7 +61,7 @@ ROOT_URLCONF = 'tipsgolbr_config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # Use templates dentro dos apps
+        'DIRS': [], # Use templates dentro dos apps
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -104,7 +106,7 @@ TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 USE_TZ = True
 
-# STATIC FILES
+# --- CONFIGURAÇÕES DE STATIC FILES (Arquivos CSS/JS) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -114,6 +116,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATICFILES_DIRS = [
     BASE_DIR / 'tips_core/static',
 ]
+
+# --- CONFIGURAÇÕES DE MEDIA FILES (Arquivos de Usuário/Imagens do Carrossel) ---
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 # DEFAULT PK
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

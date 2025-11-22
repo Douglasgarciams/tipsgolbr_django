@@ -2,7 +2,8 @@
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Tip, Noticia, Assinatura # <-- NOVO: Importa Noticia e Assinatura
+# Importa o novo modelo PromocaoBanner
+from .models import CustomUser, Tip, Noticia, Assinatura, PromocaoBanner 
 
 # --- 1. Configuração Customizada para o Modelo de Usuário ---
 class CustomUserAdmin(UserAdmin):
@@ -22,12 +23,15 @@ admin.site.register(CustomUser, CustomUserAdmin)
 # --- 2. Registro do Modelo de Dica (Tip) ---
 @admin.register(Tip)
 class TipAdmin(admin.ModelAdmin):
-    # Campos que serão exibidos na lista de Tips
-    list_display = ('match_title', 'league', 'odd_value', 'access_level', 'status', 'match_date', 'link_aposta')
+    # Os campos 'method' e 'is_active' foram adicionados na lista de exibição
+    list_display = ('match_title', 'league', 'method', 'odd_value', 'access_level', 'status', 'is_active', 'match_date', 'link_aposta')
     # Filtros que aparecerão na barra lateral direita
-    list_filter = ('access_level', 'status', 'league')
+    list_filter = ('access_level', 'status', 'league', 'is_active', 'method')
     # Campos que podem ser pesquisados
-    search_fields = ('match_title', 'prediction')
+    search_fields = ('match_title', 'method')
+    # Campos que podem ser editados diretamente na lista
+    list_editable = ('is_active', 'status', 'access_level')
+
 
 # --- 3. Registro do Modelo de Notícia ---
 @admin.register(Noticia)
@@ -39,6 +43,7 @@ class NoticiaAdmin(admin.ModelAdmin):
     # Campos que podem ser pesquisados
     search_fields = ('titulo', 'resumo')
 
+
 # --- 4. Registro do Modelo de Assinatura ---
 @admin.register(Assinatura)
 class AssinaturaAdmin(admin.ModelAdmin):
@@ -47,4 +52,16 @@ class AssinaturaAdmin(admin.ModelAdmin):
     # Filtros que aparecerão na barra lateral direita
     list_filter = ('is_active', 'start_date')
     # Campos que podem ser pesquisados
-    search_fields = ('user__username',) # Permite pesquisar pelo nome de usuário
+    search_fields = ('user__username',)
+
+# --- 5. NOVO: Registro do Modelo de Promoção/Banner ---
+@admin.register(PromocaoBanner)
+class PromocaoBannerAdmin(admin.ModelAdmin):
+    # Campos que serão exibidos na lista de Banners
+    list_display = ('titulo', 'link_url', 'ativo', 'ordem', 'data_criacao')
+    # Filtros que aparecerão na barra lateral direita
+    list_filter = ('ativo', 'data_criacao')
+    # Campos que podem ser pesquisados
+    search_fields = ('titulo', 'descricao')
+    # Campos que podem ser editados diretamente na lista
+    list_editable = ('ativo', 'ordem')

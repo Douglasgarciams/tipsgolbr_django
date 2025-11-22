@@ -43,7 +43,7 @@ class CustomUser(AbstractUser):
 
 # --- DEFINIÇÕES DE ESCOLHAS ---
 
-# NOVO: Choices para o Método de Aposta
+# Choices para o Método de Aposta
 METHOD_CHOICES = [
     ('LAY0X1', 'LAY 0x1'),
     ('LAY0X2', 'LAY 0x2'),
@@ -83,7 +83,7 @@ class Tip(models.Model):
     league = models.CharField(max_length=100, verbose_name='Liga/Competição')
     match_date = models.DateTimeField(verbose_name='Data e Hora do Jogo')
 
-    # CAMPO MODIFICADO/NOVO: O campo 'prediction' foi substituído por 'method'
+    # CAMPO DE MÉTODO
     method = models.CharField(
         max_length=10, 
         choices=METHOD_CHOICES, 
@@ -158,7 +158,6 @@ class Tip(models.Model):
         verbose_name_plural = "Dicas de Apostas"
 
     def __str__(self):
-        # Agora retorna o valor legível do método
         return f"{self.match_title} - {self.get_method_display()}" 
         
         
@@ -202,6 +201,32 @@ class Assinatura(models.Model):
     
     def __str__(self):
         return f"Assinatura de {self.user.username} - Ativa: {self.is_active}"
+
+
+# --- 5. NOVO: MODELO DE PROMOÇÃO/BANNER PARA CARROSSEL ---
+class PromocaoBanner(models.Model):
+    # CAMPO ALTERADO: Título agora é opcional
+    titulo = models.CharField(
+        max_length=200, 
+        verbose_name="Título do Banner", 
+        blank=True, 
+        null=True  
+    )
+    descricao = models.TextField(blank=True, null=True, verbose_name="Descrição Curta")
+    imagem = models.ImageField(upload_to='promo_banners/', verbose_name="Imagem/Banner")
+    link_url = models.URLField(max_length=500, verbose_name="URL de Redirecionamento", help_text="Link para onde o banner irá direcionar.")
+    ativo = models.BooleanField(default=True, verbose_name="Banner Ativo", help_text="Marque para exibir o banner no carrossel.")
+    ordem = models.IntegerField(default=0, help_text="Defina a ordem de exibição (menor número aparece primeiro).")
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['ordem', '-data_criacao']
+        verbose_name = "Banner de Promoção"
+        verbose_name_plural = "Banners de Promoções"
+
+    def __str__(self):
+        # Retorna o ID se o título estiver em branco
+        return self.titulo or f"Banner ID {self.id}" 
 
 # ----------------------------------------------------------------
 # --- LOGICA DE SINCRONIZAÇÃO VIA SIGNALS ---
