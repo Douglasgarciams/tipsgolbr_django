@@ -100,16 +100,12 @@
                             </form>
                         {% endif %}
 
-                        {# Botão de Aposta #}
+                        {# Botão de Aposta (AGORA É UM LINK DIRETO) #}
                         {% if tip.link_aposta %}
-                            <form method="post" action="{% url 'choose_plan' %}" style="display: inline;"> 
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-success btn-sm w-100 mt-auto">
-                                    Fazer Aposta Agora! <i class="fa fa-external-link-alt"></i>
-                                </button>
-                            </form>
+                            <a href="{{ tip.link_aposta }}" target="_blank" class="btn btn-success btn-sm w-100 mt-auto">
+                                Fazer Aposta Agora! <i class="fa fa-external-link-alt"></i>
+                            </a>
                         {% endif %}
-
                     </div>
                 </div>
             {% endfor %}
