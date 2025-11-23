@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+
+{% block title %}Calculadora Dutching{% endblock %}
+
+{% block content %}
+    <div class="container my-4">
+        <h1 class="text-center text-light mb-4">Calculadora Dutching (Stake Total Fixa)</h1>
+        
+        <div class="row justify-content-center">
+            {# ALTERADO PARA COL-LG-12 PARA USAR A LARGURA MÁXIMA #}
+            <div class="col-lg-12"> 
+                
+                <div class="row">
+                    
+                    {# COLUNA 1: ENTRADA DE DADOS E ODDS (50%) #}
+                    <div class="col-md-6 mb-4">
+                        <div class="card p-4 h-100">
+                            
+                            <h4 class="text-warning mb-3"><i class="fas fa-money-bill-wave me-2"></i> Stake Total a Distribuir</h4>
+                            <div class="row g-3 mb-4">
+                                
+                                <!-- Valor Total da Stake -->
+                                <div class="col-12">
+                                    <label for="totalStake" class="form-label">Valor Total (Stake)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" id="totalStake" class="form-control" value="1000.00" min="1" step="0.01" oninput="calculateDutching()">
+                                    </div>
+                                    <small class="text-secondary">Este valor será dividido entre todas as apostas.</small>
+                                </div>
+                            </div>
+                            
+                            <h4 class="text-warning mb-3"><i class="fas fa-percent me-2"></i> Odds de Entrada</h4>
+                            
+                            {# ESTRUTURA PARA DUAS COLUNAS DE ODDS #}
+                            <div id="oddsContainer" class="row">
+                                <div id="leftColumn" class="col-6">
+                                    {# Odds 1-6 serão renderizadas aqui #}
+                                </div>
+                                <div id="rightColumn" class="col-6">
+                                    {# Odds 7-12 serão renderizadas aqui #}
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-3">
+                                <button class="btn btn-secondary btn-sm" onclick="addOddInput()">
+                                    <i class="fas fa-plus me-1"></i> Adicionar Odd
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="removeOddInput()">
+                                    <i class="fas fa-minus me-1"></i> Remover Última
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                    
+                    {# COLUNA 2: RESUMO FINANCEIRO E STAKES INDIVIDUAIS (50%) #}
+                    <div class="col-md-6 mb-4">
+                        <div class="card p-4 h-100 d-flex flex-column">
+                            <h4 class="text-warning mb-4"><i class="fas fa-calculator me-2"></i> Resumo Financeiro</h4>
+                            
+                            <div id="resultsSection" class="flex-grow-1">
+                                <div class="mb-3 p-3 bg-dark rounded">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2 mb-md-0">
+                                            <p class="mb-1 fw-bold text-secondary">Ganhos se qualquer Aposta Vencer:</p>
+                                            <h4 id="totalPayout" class="fw-bold text-light">R$ 0,00</h4>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-1 fw-bold text-secondary">Lucro Líquido Garantido:</p>
+                                            <h4 id="netProfit" class="fw-bold text-win">R$ 0,00</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h5 class="text-warning mt-4 mb-3"><i class="fas fa-hand-holding-usd me-2"></i> Stakes Individuais</h5>
+
+                                <div id="stakesResults" class="mt-2 pt-3 border-top border-secondary p-3 bg-dark rounded">
+                                    <p class="text-secondary small mb-0">Valores de aposta por Odd serão listados aqui.</p>
+                                </div>
+                                
+                                <div class="mt-4 pt-3 border-top border-secondary">
+                                    <p class="mb-0 fw-bold">Soma das Stakes Distribuídas:</p>
+                                    <h4 id="totalStakeDistributed" class="text-light">R$ 0,00</h4>
+                                    <p class="text-danger small" id="stakeDifferenceAlert" style="display: none;">A soma das Stakes não totaliza o Valor Total inserido. Ajuste as Odds ou o Valor Total.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CÓDIGO JS E CSS DA CALCULADORA -->
+    <style>
+        :root {
+            --dark-bg: #0c0c0c;
+            --card-bg: #2b2b2b;
+            --primary-color: #ffc107;
+        }
+        /* Estilos Específicos para a Calculadora */
+        .card { background-color: var(--card-bg); }
+        .bg-dark { background-color: #333 !important; }
+        .input-group-text { background-color: #3a3a3a; color: #f8f9fa; border-color: #4a4a4a; }
+        .form-control { background-color: #4a4a4a; color: #f8f9fa; border-color: #4a4a4a; }
+        
+        /* Ajuste para o label de Odd ficar menor */
+        .label-odd {
+            font-weight: bold;
+            color: var(--primary-color);
+            min-width: 60px;
+            text-align: right;
+            padding-right: 10px;
+            font-size: small;
+        }
+        /* Garantir que as colunas internas de Odds sejam compactas */
+        #oddsContainer .odd-input-row { margin-bottom: 5px; }
+        #oddsContainer .label-odd { font-size: small; }
+        
+        /* Centraliza os elementos dentro da linha de Odd */
+        /* CORREÇÃO: Usamos flex para alinhar e justificar */
+        #oddsContainer .col-12 { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; /* Espaçamento entre os elementos */
+        } 
+        
+        /* CORREÇÃO PRINCIPAL: AUMENTANDO A LARGURA DO INPUT DE ODD */
+        #oddsContainer .form-control { 
+            width: 90px !important; /* 90px deve acomodar 4-5 dígitos */
+            margin: 0 10px 0 0; /* Margem direita para separar do valor da stake */
+            text-align: right; /* Alinha o texto do input à direita (para valores) */
+        } 
+        
+        /* Alinhamento do valor da stake ao lado do input */
+        #oddsContainer .odd-input-row span.fw-bold { 
+            font-size: small;
+            color: #17a2b8 !important; 
+            min-width: 80px; /* Aumenta a largura mínima do valor da Stake para R$XXX.XX */
+            text-align: right; /* Alinha o valor da Stake à direita */
+        }
+    </style>
+    
+    <script>
+        // Variáveis globais
+        const totalStakeInput = document.getElementById('totalStake');
+        const totalPayoutDisplay = document.getElementById('totalPayout');
+        const netProfitDisplay = document.getElementById('netProfit');
+        const totalStakeDistributedDisplay = document.getElementById('totalStakeDistributed');
+        const stakeDifferenceAlert = document.getElementById('stakeDifferenceAlert');
+        const stakesResults = document.getElementById('stakesResults');
+        const leftColumn = document.getElementById('leftColumn');
+        const rightColumn = document.getElementById('rightColumn');
+
+        const initialOddsValues = []; // Começa vazio por padrão
+        let oddCounter = 0; 
+
+        // Função que renderiza todos os inputs (1 a 12) em DUAS COLUNAS
+        function renderOdds() {
+            leftColumn.innerHTML = '';
+            rightColumn.innerHTML = '';
+            
+            // Renderiza 12 slots de input, todos desabilitados no início
+            for (let i = 1; i <= 12; i++) {
+                const newRow = document.createElement('div');
+                newRow.className = 'odd-input-row row g-3 align-items-center';
+                newRow.id = `row${i}`;
+                
+                const targetColumn = (i <= 6) ? leftColumn : rightColumn;
+                
+                const isDisabled = (i > 3); 
+                
+                newRow.innerHTML = `
+                    <div class="col-12">
+                        <label class="label-odd" for="odd${i}">Aposta ${i}:</label>
+                        <input type="number" id="odd${i}" class="form-control odd-input" 
+                               value="" 
+                               min="1.01" step="0.01" 
+                               oninput="calculateDutching()" 
+                               ${isDisabled ? 'disabled' : ''}>
+                        <span id="stakeDisplay${i}" class="fw-bold text-info small ms-2"></span>
+                    </div>
+                `;
+                targetColumn.appendChild(newRow);
+            }
+            
+            oddCounter = 3; 
+        }
+
+        // Adiciona um novo campo de Odd
+        function addOddInput() {
+            if (oddCounter >= 12) {
+                alert('O limite é de 12 Odds.');
+                return;
+            }
+            oddCounter++;
+            const newOddId = oddCounter;
+            
+            const input = document.getElementById(`odd${newOddId}`);
+            if (input) {
+                input.disabled = false;
+                input.value = '';
+            }
+            calculateDutching();
+        }
+
+        // Remove o último campo de Odd
+        function removeOddInput() {
+            if (oddCounter <= 1) { 
+                alert('É necessário manter pelo menos 1 slot de Odd visível.');
+                return;
+            }
+            
+            const input = document.getElementById(`odd${oddCounter}`);
+            if (input) {
+                input.value = '';
+                input.disabled = true;
+            }
+            document.getElementById(`stakeDisplay${oddCounter}`).textContent = '';
+
+            oddCounter--;
+            calculateDutching();
+        }
+
+        // Função principal de cálculo Dutching
+        function calculateDutching() {
+            const totalStake = parseFloat(totalStakeInput.value) || 0;
+            const oddInputs = [];
+            
+            for (let i = 1; i <= oddCounter; i++) {
+                const inputElement = document.getElementById(`odd${i}`);
+                
+                if (inputElement && !inputElement.disabled) {
+                    
+                    if (inputElement.value.trim() === '') {
+                        document.getElementById(`stakeDisplay${i}`).textContent = '';
+                        continue; 
+                    }
+                    
+                    const oddValue = parseFloat(inputElement.value);
+                    
+                    if (!isNaN(oddValue) && oddValue > 1.0) {
+                        oddInputs.push({ odd: oddValue, index: i });
+                    } else {
+                        stakeDifferenceAlert.textContent = `Erro: Aposta ${i} (Odd ${inputElement.value}) deve ser maior que 1.0.`;
+                        stakeDifferenceAlert.style.display = 'block';
+                        renderIndividualStakes([], 0, 0); 
+                        return;
+                    }
+                }
+            }
+            
+            // Validação Crucial: 1 Odd Válida e Stake Total > 0
+            if (oddInputs.length < 1 || totalStake <= 0) {
+                if (oddInputs.length < 1 && totalStake > 0) {
+                     stakeDifferenceAlert.textContent = 'Insira pelo menos 1 Odd válida.';
+                     stakeDifferenceAlert.style.display = 'block';
+                } else {
+                     stakeDifferenceAlert.style.display = 'none';
+                }
+                
+                // Limpa displays de resultado
+                for (let i = 1; i <= 12; i++) {
+                    const stakeSpan = document.getElementById(`stakeDisplay${i}`);
+                    if(stakeSpan) stakeSpan.textContent = '';
+                }
+                totalPayoutDisplay.textContent = 'R$ 0.00';
+                netProfitDisplay.textContent = 'R$ 0.00';
+                totalStakeDistributedDisplay.textContent = 'R$ 0.00';
+                renderIndividualStakes([], 0, 0);
+                return;
+            }
+            
+            stakeDifferenceAlert.style.display = 'none'; 
+
+            // Cálculo Dutching
+            const sumOfInverses = oddInputs.reduce((sum, item) => sum + (1 / item.odd), 0);
+            const totalPayout = totalStake / sumOfInverses;
+            let totalActualStake = 0;
+            
+            oddInputs.forEach(item => {
+                const stakeIndividual = totalPayout / item.odd;
+                totalActualStake += stakeIndividual;
+                document.getElementById(`stakeDisplay${item.index}`).textContent = `R$ ${stakeIndividual.toFixed(2)}`;
+            });
+
+            const netProfit = totalPayout - totalStake;
+            
+            // 5. Atualiza o Resumo
+            totalPayoutDisplay.textContent = `R$ ${totalPayout.toFixed(2)}`;
+            netProfitDisplay.textContent = `R$ ${netProfit.toFixed(2)}`;
+            netProfitDisplay.className = netProfit >= 0 ? 'text-win fw-bold' : 'text-loss fw-bold';
+            
+            totalStakeDistributedDisplay.textContent = `R$ ${totalActualStake.toFixed(2)}`;
+            
+            const difference = Math.abs(totalActualStake - totalStake);
+            if (difference > 0.01) { 
+                stakeDifferenceAlert.textContent = `Atenção: A soma das Stakes (R$ ${totalActualStake.toFixed(2)}) é diferente da Stake Total (R$ ${totalStake.toFixed(2)}).`;
+                stakeDifferenceAlert.style.display = 'block';
+            }
+            
+            renderIndividualStakes(oddInputs, totalPayout, totalStake);
+        }
+        
+        // Função para renderizar as stakes individuais na área de resultado
+        function renderIndividualStakes(oddInputs, totalPayout, totalStake) {
+            let resultsHTML = '';
+            
+            if (oddInputs.length < 1) {
+                 stakesResults.innerHTML = '<p class="text-secondary small mb-0">Insira pelo menos 1 Odd válida para ver a distribuição.</p>';
+                 return;
+            }
+
+            oddInputs.forEach(item => {
+                const stakeIndividual = totalPayout / item.odd;
+
+                resultsHTML += `
+                    <div class="result-row row">
+                        <div class="col-md-6 text-warning fw-bold">Aposta ${item.index} (Odd ${item.odd.toFixed(2)}):</div>
+                        <div class="col-md-6">
+                            Stake: 
+                            <span class="fw-bold text-info">R$ ${stakeIndividual.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            stakesResults.innerHTML = resultsHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderOdds();
+            calculateDutching();
+        });
+    </script>
+{% endblock content %}

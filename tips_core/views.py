@@ -143,6 +143,13 @@ def analysis_dashboard(request):
     }
     return render(request, 'tips_core/analysis_dashboard.html', context)
 
+    # VIEW DA CALCULADORA (NOVA)
+def calculator_page(request):
+    """Renderiza a página da Calculadora Dutching."""
+    return render(request, 'tips_core/dutching_calculator.html', {
+        'title': 'Calculadora Dutching',
+    })
+
 
 # --- VIEWS DE AUTENTICAÇÃO E PREMIUM ---
 

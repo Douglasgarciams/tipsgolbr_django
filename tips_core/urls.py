@@ -11,6 +11,9 @@ urlpatterns = [
     
     # Rota de Análise de Desempenho (NOVA IMPLEMENTAÇÃO)
     path('dashboard-analise/', views.analysis_dashboard, name='analysis_dashboard'),
+
+    # Rota da Calculadora (CORRIGIDA)
+    path('calculadora-dutching/', views.calculator_page, name='calculator_page'),
     
     # Rota do Botão 'Premium' no Navbar (Go-to-Premium)
     path('premium/', views.go_to_premium, name='premium_link'), 
