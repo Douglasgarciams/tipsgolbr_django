@@ -8,7 +8,8 @@ from django.contrib.auth import get_user_model, update_session_auth_hash
 # IMPORTAÇÕES ESSENCIAIS PARA O CÁLCULO DE ANÁLISE
 from django.db.models import Sum, Count, F, Case, When, DecimalField 
 from .models import Tip, Noticia, Assinatura, METHOD_CHOICES, PromocaoBanner
-from .forms import CustomUserCreationForm 
+from .forms import CustomUserCreationForm
+from django.conf import settings
 
 # --- VIEWS DE CONTEÚDO ---
 
@@ -209,6 +210,7 @@ def premium_tips(request):
 def choose_plan(request):
     """
     Página que permite ao usuário escolher entre 3 planos de assinatura.
+    AGORA: Adiciona as URLs do PagSeguro do settings.py.
     """
     plans = [
         {'id': 1, 'name': 'Plano Mensal', 'duration': 1, 'price': 'R$ 50,00'},
@@ -216,6 +218,15 @@ def choose_plan(request):
         {'id': 6, 'name': 'Plano Semestral', 'duration': 6, 'price': 'R$ 185,00'},
     ]
     
+    # PASSO CHAVE: Acessa o dicionário de URLs do PagSeguro
+    pagseguro_urls = settings.PAGSEGURO_PLAN_URLS 
+    
+    # Itera sobre os planos e adiciona a URL correspondente
+    for plan in plans:
+        # Usa o 'id' do plano (1, 3, ou 6) para buscar a URL correta
+        # Adiciona a URL do PagSeguro como uma nova chave no dicionário do plano
+        plan['pagseguro_url'] = pagseguro_urls.get(plan['id'])
+        
     context = {
         'title': 'Escolha seu Plano Premium',
         'plans': plans

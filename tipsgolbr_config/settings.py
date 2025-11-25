@@ -129,3 +129,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'home'
+
+# --- CONFIGURAÇÕES DE PAGAMENTO (PAGSEGURO) ---
+
+# Dicionário mapeando o ID do Plano (usado no código) para a URL de pagamento REAL do PagSeguro.
+PAGSEGURO_PLAN_URLS = {
+    1: "https://pag.ae/81fefz7CM",
+    3: "https://pag.ae/81femFKQr",
+    6: "https://pag.ae/81fej-om6",
+}

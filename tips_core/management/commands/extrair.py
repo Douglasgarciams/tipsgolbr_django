@@ -2,6 +2,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 from tips_core.models import Noticia 
+from tips_core.tasks import extrair_noticias_rss # IMPORTAÇÃO CHAVE
 
 class Command(BaseCommand):
     help = 'Extrai notícias de fontes externas e limpa notícias muito antigas.'
@@ -14,7 +15,7 @@ class Command(BaseCommand):
         deleted_count, _ = Noticia.objects.filter(data_publicacao__lt=seven_days_ago).delete()
         self.stdout.write(self.style.SUCCESS(f'Limpeza concluída. {deleted_count} notícias antigas removidas.'))
 
-        # 2. LOGICA DE EXTRAÇÃO EXISTENTE
-        # ... Seu código para extrair e salvar as 90 notícias aqui ...
+        # 2. LÓGICA DE EXTRAÇÃO REAL
+        summary_message = extrair_noticias_rss()
 
-        self.stdout.write(self.style.SUCCESS('Extração concluída.'))
+        self.stdout.write(self.style.SUCCESS(summary_message))

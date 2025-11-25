@@ -27,7 +27,7 @@ urlpatterns = [
     path('checkout/planos/', views.choose_plan, name='choose_plan'),
     
     # 2. Rota de Simulação de Pagamento
-    path('checkout/pagar/<int:plan_id>/', views.simulate_checkout_with_plan, name='simulate_checkout_with_plan'),
+    #path('checkout/pagar/<int:plan_id>/', views.simulate_checkout_with_plan, name='simulate_checkout_with_plan'),
     
     # 3. Rota de Confirmação/Webhook
     path('checkout/confirmar/<str:username>/', views.confirm_payment, name='confirm_payment'),

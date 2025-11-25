@@ -23,7 +23,8 @@
                         <li><i class="fas fa-check-circle text-success me-2"></i> Suporte Prioritário</li>
                     </ul>
                     
-                    <a href="{% url 'simulate_checkout_with_plan' plan_id=plan.id %}" class="btn btn-lg btn-success mt-auto">
+                    {# MUDANÇA AQUI: Usa a URL do PagSeguro e abre em nova aba #}
+                    <a href="{{ plan.pagseguro_url }}" class="btn btn-lg btn-success mt-auto" target="_blank" rel="noopener noreferrer">
                         Assinar Agora!
                     </a>
                 </div>
