@@ -134,7 +134,7 @@ LOGOUT_REDIRECT_URL = 'home'
 
 # Dicionário mapeando o ID do Plano (usado no código) para a URL de pagamento REAL do PagSeguro.
 PAGSEGURO_PLAN_URLS = {
-    1: "https://pag.ae/81fefz7CM",
+    1: "https://pagamento.pagbank.com.br/pagamento?code=dbffd0c4-1905-48b7-9786-60bff8a2ffc0&t=2cd32d7e-a0c6-4fb7-84ac-194683b4c494",
     3: "https://pag.ae/81femFKQr",
     6: "https://pag.ae/81fej-om6",
 }
