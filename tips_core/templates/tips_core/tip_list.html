@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}{% endblock %}
+{% block title %}Tips e Análises do Dia{% endblock %}
 
 {% block content %}
     {# HERO SECTION: CONTEÚDO PRINCIPAL DE DESTAQUE #}
@@ -13,13 +14,12 @@
                     {# CONTAINER FULL-WIDTH (COL-12) APLICANDO A REGRA DE ALTURA CURTA #}
                     <div class="row justify-content-center pt-2 pb-2">
                         <div class="col-12"> {# LARGURA TOTAL #}
-                            {# NOVO CONTÊINER CSS APLICADO AQUI #}
                             <div id="promoCarousel" class="carousel slide promo-carousel-container" data-bs-ride="carousel" data-bs-interval="5000">
                                 <div class="carousel-inner h-100"> 
                                     {% for banner in promo_banners %}
-                                        <div class="carousel-item active h-100 {% if forloop.first %}active{% endif %}">
+                                        <div class="carousel-item h-100 {% if forloop.first %}active{% endif %}">
                                             <a href="{{ banner.link_url }}" target="_blank" class="d-block h-100">
-                                                {# Imagem agora confia 100% no CSS Externo para preencher o espaço #}
+                                                {# CORREÇÃO AQUI: USA O CAMPO ORIGINAL DO UPLOAD #}
                                                 <img src="{{ banner.imagem.url }}" alt="{{ banner.titulo }}">
                                                 <div class="carousel-caption d-none d-md-block text-start p-2 rounded">
                                                     {% if banner.titulo %}
@@ -45,7 +45,7 @@
                         </div>
                     </div>
                 {% else %}
-                    {# Fallback #}
+                    {# Fallback se não houver banners #}
                     <h1 class="display-5 fw-bold text-light mt-4">Nenhuma promoção ativa no momento.</h1>
                     <p class="lead text-light mt-3">Cadastre-se para ver as melhores tips!</p>
                 {% endif %}
@@ -61,12 +61,9 @@
                     Cadastre-se Grátis Agora! <i class="fa fa-arrow-right"></i>
                 </a>
             {% else %}
-                <form method="post" action="{% url 'choose_plan' %}" style="display: inline;"> 
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-warning btn-lg mt-3 fw-bold text-dark">
-                        Ver Tips Premium <i class="fa fa-crown"></i>
-                    </button>
-                </form>
+                <a href="{% url 'premium_link' %}" class="btn btn-warning btn-lg mt-3 fw-bold text-dark me-3">
+                    Ver Tips Premium <i class="fa fa-crown"></i>
+                </a>
             {% endif %}
         </div>
     </div>

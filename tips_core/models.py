@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings 
 from django.db.models.signals import post_save 
+from django.utils import timezone # ESSENCIAL: Adicionado para usar timezone.now
 
 # --- 1. MODELO DE USUÁRIO CUSTOMIZADO ---
 class CustomUser(AbstractUser):
@@ -166,7 +167,8 @@ class Noticia(models.Model):
     titulo = models.CharField(max_length=255, unique=True, verbose_name="Título")
     fonte_url = models.URLField(max_length=500, verbose_name="URL da Fonte")
     resumo = models.TextField(blank=True, null=True, verbose_name="Resumo")
-    data_publicacao = models.DateTimeField(verbose_name="Data de Publicação")
+    # CORRIGIDO: Adicionado default=timezone.now
+    data_publicacao = models.DateTimeField(verbose_name="Data de Publicação", default=timezone.now) 
     data_extracao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Extração")
 
     imagem_url = models.URLField(
@@ -203,17 +205,17 @@ class Assinatura(models.Model):
         return f"Assinatura de {self.user.username} - Ativa: {self.is_active}"
 
 
-# --- 5. NOVO: MODELO DE PROMOÇÃO/BANNER PARA CARROSSEL ---
+# --- 5. MODELO DE PROMOÇÃO/BANNER PARA CARROSSEL (BOTAO RESTAURADO) ---
 class PromocaoBanner(models.Model):
-    # CAMPO ALTERADO: Título agora é opcional
-    titulo = models.CharField(
-        max_length=200, 
-        verbose_name="Título do Banner", 
-        blank=True, 
-        null=True  
-    )
+    titulo = models.CharField(max_length=200, verbose_name="Título do Banner", blank=True, null=True)
     descricao = models.TextField(blank=True, null=True, verbose_name="Descrição Curta")
-    imagem = models.ImageField(upload_to='promo_banners/', verbose_name="Imagem/Banner")
+    
+    # CAMPO RESTAURADO: ImageField para trazer de volta o botão de upload
+    imagem = models.ImageField(
+        upload_to='promo_banners/', 
+        verbose_name="Imagem/Banner (Upload)"
+    )
+
     link_url = models.URLField(max_length=500, verbose_name="URL de Redirecionamento", help_text="Link para onde o banner irá direcionar.")
     ativo = models.BooleanField(default=True, verbose_name="Banner Ativo", help_text="Marque para exibir o banner no carrossel.")
     ordem = models.IntegerField(default=0, help_text="Defina a ordem de exibição (menor número aparece primeiro).")
@@ -225,7 +227,6 @@ class PromocaoBanner(models.Model):
         verbose_name_plural = "Banners de Promoções"
 
     def __str__(self):
-        # Retorna o ID se o título estiver em branco
         return self.titulo or f"Banner ID {self.id}" 
 
 # ----------------------------------------------------------------
