@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import pytz 
 from django.contrib.auth import get_user_model, update_session_auth_hash 
 # IMPORTAÇÕES ESSENCIAIS PARA O CÁLCULO DE ANÁLISE
-from django.db.models import Sum, Count, F, Case, When, DecimalField 
+from django.db.models import Sum, Count, F, Case, When, DecimalField, Max 
 from .models import Tip, Noticia, Assinatura, METHOD_CHOICES, PromocaoBanner
 from .forms import CustomUserCreationForm
 from django.conf import settings
@@ -103,6 +103,7 @@ def analysis_dashboard(request):
         total_apostas=Count('id'),
         total_wins=Count(Case(When(status='WIN', then=1))),
         total_losses=Count(Case(When(status='LOSS', then=1))),
+        last_match_date=Max('match_date'),
     ).order_by('-lucro_liquido_total')
 
     # 4. CALCULA OS TOTAIS GLOBAIS DIRETAMENTE NO DATABASE
@@ -126,14 +127,16 @@ def analysis_dashboard(request):
             yield_percent = 0.0
 
         analysis_summary.append({
-            'method_code': item['method'],
-            'method_name': method_dict.get(item['method'], 'Desconhecido'),
-            'total_aposta': item['total_aposta'],
-            'lucro_liquido_total': item['lucro_liquido_total'],
-            'total_apostas': item['total_apostas'],
-            'total_wins': item['total_wins'],
-            'total_losses': item['total_losses'],
-            'yield_percent': yield_percent
+        'method_code': item['method'],
+        'method_name': method_dict.get(item['method'], 'Desconhecido'),
+        'total_aposta': item['total_aposta'],
+        'lucro_liquido_total': item['lucro_liquido_total'],
+        'total_apostas': item['total_apostas'],
+        'total_wins': item['total_wins'],
+        'total_losses': item['total_losses'],
+        'yield_percent': yield_percent,
+        # AQUI: Adicionar a data ao dicionário de contexto
+        'match_date': item['last_match_date'],
         })
 
     context = {
