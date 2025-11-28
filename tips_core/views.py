@@ -2,45 +2,76 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db import transaction 
 from django.contrib import messages
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta, date # Adicionado 'date'
 import pytz 
 from django.contrib.auth import get_user_model, update_session_auth_hash 
 # IMPORTAÇÕES ESSENCIAIS PARA O CÁLCULO DE ANÁLISE
-from django.db.models import Sum, Count, F, Case, When, DecimalField, Max 
+from django.db.models import Sum, Count, F, Case, When, DecimalField, Max, functions # Adicionado Max e functions
+from django.conf import settings 
 from .models import Tip, Noticia, Assinatura, METHOD_CHOICES, PromocaoBanner
 from .forms import CustomUserCreationForm
-from django.conf import settings
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+import requests 
+import xml.etree.ElementTree as ET
+from django.utils import timezone
+import json # Necessário para serializar dados do gráfico
 
 # --- VIEWS DE CONTEÚDO ---
 
 def public_tips_list(request):
     """
-    Exibe a lista de tips gratuitas E as notícias/banners na página principal.
-    REGRAS DE VISIBILIDADE:
-    - Tips Gratuitas: Somente se o usuário estiver logado E aposta estiver ATIVA.
-    - Notícias/Banners de Promoção: Somente se o usuário NÃO estiver logado.
+    Exibe a lista de tips gratuitas, separando-as por Jogos de Hoje, Próximos e Passados.
     """
-    free_tips = None 
     noticias_recentes = None
-    promo_banners = None # Nova variável para os banners
+    promo_banners = None
+
+    # Define a data de HOJE (apenas a data, desconsiderando a hora)
+    today = timezone.now().date()
+    
+    # Dicionários vazios para as categorias de tips
+    tips_categorias = {
+        'hoje': [],
+        'proximos': [],
+        'passados': [], # Passados com status PENDING/SEM RESULTADO
+        'concluidos': [], # Passados com status WIN/LOSS/VOID
+    }
 
     # 1. VISUALIZAÇÃO PÚBLICA (Usuário NÃO logado)
     if not request.user.is_authenticated:
-        # Busca as notícias APENAS para quem não está logado
         noticias_recentes = Noticia.objects.all().order_by('-data_publicacao')[:12]
-        # Busca os banners ativos (e os ordena)
         promo_banners = PromocaoBanner.objects.filter(ativo=True).order_by('ordem')
         
     # 2. VISUALIZAÇÃO DE MEMBRO (Usuário logado)
     else:
-        # Filtra as tips gratuitas (e ativas)
-        free_tips = Tip.objects.filter(access_level='FREE', is_active=True).order_by('-match_date')
-        # Notícias e banners ficam como 'None' e não serão exibidos.
+        # Filtra todas as tips gratuitas (consideramos todas se o usuário estiver logado)
+        all_free_tips = Tip.objects.filter(access_level='FREE').order_by('match_date')
         
+        for tip in all_free_tips:
+            tip_date = tip.match_date.date()
+            
+            # --- Regras de Classificação ---
+            if tip_date == today:
+                # Jogo é hoje
+                tips_categorias['hoje'].append(tip)
+            elif tip_date > today:
+                # Jogo no futuro
+                tips_categorias['proximos'].append(tip)
+            else: # tip_date < today (Passado)
+                # Jogo no passado
+                if tip.status in ['WIN', 'LOSS', 'VOID']:
+                    # Aposta concluída (com resultado)
+                    tips_categorias['concluidos'].append(tip)
+                else:
+                    # Aposta passada, mas o resultado ainda está como Pendente (PENDING)
+                    tips_categorias['passados'].append(tip)
+
+
     context = {
-        'tips': free_tips,
+        # Passa o dicionário de categorias completo para o template
+        'tips_categorias': tips_categorias, 
         'noticias': noticias_recentes,
-        'promo_banners': promo_banners, # Adicione os banners ao contexto
+        'promo_banners': promo_banners,
         'title': 'Tips e Análises do Dia' 
     }
     return render(request, 'tips_core/tip_list.html', context)
@@ -48,24 +79,17 @@ def public_tips_list(request):
 
 def deactivate_tip(request, tip_id):
     """
-    Muda o status 'is_active' de uma aposta para False (oculta), 
-    mantendo-a no banco de dados para o histórico de desempenho.
+    Muda o status 'is_active' de uma aposta para False (oculta).
     """
-    # É crucial que o método seja POST para segurança E que seja um superusuário.
     if request.method == 'POST' and request.user.is_superuser:
         try:
-            # 1. Busca a aposta pelo ID (pk)
             tip = get_object_or_404(Tip, pk=tip_id)
-            
-            # 2. Desativa a aposta
             tip.is_active = False
             tip.save()
             messages.success(request, f"Aposta '{tip.match_title}' ocultada com sucesso (mantida no histórico).")
-            
         except Exception as e:
             messages.error(request, f"Erro ao ocultar aposta: {e}")
             
-    # Redireciona de volta para a página inicial (ou para onde for mais útil)
     return redirect('home')
 
 
@@ -81,43 +105,88 @@ def access_denied(request):
 @login_required
 def analysis_dashboard(request):
     """
-    Calcula e exibe o resumo de ganhos e perdas por Método de Aposta.
+    Calcula e exibe o resumo de ganhos e perdas por Método de Aposta,
+    incluindo dados históricos mensais para o gráfico de linha.
     """
     
     # 1. Filtra apenas as apostas CONCLUÍDAS (WIN, LOSS)
     concluded_tips = Tip.objects.filter(status__in=['WIN', 'LOSS'])
     
-    # 2. Define o Lucro Líquido
-    # CORREÇÃO APLICADA: SE WIN, usa F('valor_ganho') (o lucro líquido já registrado)
+    # 2. Define o Lucro Líquido (USADO EM MÚLTIPLAS CONSULTAS)
     net_profit_case = Case(
-        When(status='WIN', then=F('valor_ganho')), # <-- CORREÇÃO AQUI
+        When(status='WIN', then=F('valor_ganho')), 
         When(status='LOSS', then=F('valor_perda') * -1), 
         default=0,
         output_field=DecimalField()
     )
 
-    # 3. Agrupa as apostas por MÉTODO e calcula as métricas por grupo
+    # --- CONSULTA 1: DETALHES POR MÉTODO (Tabela) ---
     summary_data = concluded_tips.values('method').annotate(
         total_aposta=Sum('valor_aposta'),
         lucro_liquido_total=Sum(net_profit_case),
         total_apostas=Count('id'),
         total_wins=Count(Case(When(status='WIN', then=1))),
         total_losses=Count(Case(When(status='LOSS', then=1))),
-        last_match_date=Max('match_date'),
+        # ADICIONADO: Data da última partida para a coluna da tabela
+        match_date=Max('match_date'), 
     ).order_by('-lucro_liquido_total')
 
-    # 4. CALCULA OS TOTAIS GLOBAIS DIRETAMENTE NO DATABASE
+    # -----------------------------------------------------
+    # --- CONSULTA 2: EVOLUÇÃO MENSAL (Gráfico de Linha) ---
+    # -----------------------------------------------------
+    # Agrupa por Ano e Mês para obter o lucro líquido por período.
+    monthly_summary = concluded_tips.annotate(
+        year=functions.ExtractYear('match_date'),
+        month=functions.ExtractMonth('match_date')
+    ).values('year', 'month').annotate(
+        monthly_profit=Sum(net_profit_case)
+    ).order_by('year', 'month')
+    
+    
+    # -----------------------------------------------------
+    # --- FORMATAÇÃO DOS DADOS MENSAIS PARA O CHART.JS ---
+    # -----------------------------------------------------
+    monthly_labels = []
+    monthly_profits = []
+    
+    # Gera os nomes dos meses
+    MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+    
+    # Calcula o lucro ACUMULADO (necessário para o gráfico de linha)
+    cumulative_profit = 0
+    
+    for entry in monthly_summary:
+        month_name = MONTH_NAMES[entry['month'] - 1] # -1 porque JS é 0-indexed
+        label = f"{month_name}/{entry['year']}"
+        
+        # Lucro líquido do mês
+        profit_of_month = entry['monthly_profit'] or 0 
+        
+        # Lucro ACUMULADO até o final daquele mês
+        cumulative_profit += profit_of_month
+        
+        monthly_labels.append(label)
+        monthly_profits.append(float(cumulative_profit)) # O JS precisa de float
+
+    # Dicionário final que será serializado para o JavaScript
+    monthly_data_for_chart = {
+        'labels': monthly_labels,
+        'data': monthly_profits
+    }
+    
+    # -----------------------------------------------------
+    # --- FORMATAÇÃO FINAL PARA O CONTEXTO ---
+    # -----------------------------------------------------
+
     global_totals = concluded_tips.aggregate(
         total_stakes=Sum('valor_aposta'),
         total_net_profit=Sum(net_profit_case)
     )
 
-    # 5. Formata os dados para o template e adiciona o nome legível do método
     analysis_summary = []
     method_dict = dict(METHOD_CHOICES)
-    
+
     for item in summary_data:
-        # Garante que total_aposta não seja None ou zero antes de dividir
         total_aposta_decimal = item['total_aposta']
         lucro_liquido_total_decimal = item['lucro_liquido_total']
         
@@ -127,16 +196,16 @@ def analysis_dashboard(request):
             yield_percent = 0.0
 
         analysis_summary.append({
-        'method_code': item['method'],
-        'method_name': method_dict.get(item['method'], 'Desconhecido'),
-        'total_aposta': item['total_aposta'],
-        'lucro_liquido_total': item['lucro_liquido_total'],
-        'total_apostas': item['total_apostas'],
-        'total_wins': item['total_wins'],
-        'total_losses': item['total_losses'],
-        'yield_percent': yield_percent,
-        # AQUI: Adicionar a data ao dicionário de contexto
-        'match_date': item['last_match_date'],
+            'method_code': item['method'],
+            'method_name': method_dict.get(item['method'], 'Desconhecido'),
+            'total_aposta': item['total_aposta'],
+            'lucro_liquido_total': item['lucro_liquido_total'],
+            'total_apostas': item['total_apostas'],
+            'total_wins': item['total_wins'],
+            'total_losses': item['total_losses'],
+            'yield_percent': yield_percent,
+            # Passa a data corrigida para o template
+            'match_date': item['match_date'], 
         })
 
     context = {
@@ -144,10 +213,13 @@ def analysis_dashboard(request):
         'summary': analysis_summary,
         'global_stakes': global_totals.get('total_stakes') or 0,
         'global_net_profit': global_totals.get('total_net_profit') or 0,
+        # NOVO: Dados mensais reais para o Gráfico de Linha
+        'monthly_data_json': json.dumps(monthly_data_for_chart),
     }
     return render(request, 'tips_core/analysis_dashboard.html', context)
 
-    # VIEW DA CALCULADORA (NOVA)
+
+# --- VIEW DA CALCULADORA (NOVA) ---
 def calculator_page(request):
     """Renderiza a página da Calculadora Dutching."""
     return render(request, 'tips_core/dutching_calculator.html', {
@@ -235,23 +307,6 @@ def choose_plan(request):
         'plans': plans
     }
     return render(request, 'tips_core/choose_plan.html', context)
-
-
-@login_required
-def simulate_checkout_with_plan(request, plan_id):
-    """
-    NOVA FUNÇÃO: Recebe o ID do plano e redireciona o usuário para o PagSeguro/PagBank.
-    """
-    if request.method == 'GET':
-        user = request.user
-        
-        # Simula a URL de pagamento REAL que receberia o plan_id
-        PAGSEGURO_URL = f"https://pagseguro.uol.com.br/checkout?user={user.username}&plan={plan_id}"
-        
-        messages.info(request, f"Simulando redirecionamento para PagSeguro com Plano ID {plan_id}.")
-        return redirect(PAGSEGURO_URL)
-
-    return redirect('choose_plan')
 
 
 def confirm_payment(request, username):

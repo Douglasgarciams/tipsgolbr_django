@@ -11,7 +11,6 @@
             {# CONDICIONAL: SE O USUÁRIO NÃO ESTÁ LOGADO, MOSTRAR CARROSSEL #}
             {% if not user.is_authenticated %}
                 {% if promo_banners %}
-                    {# CONTAINER FULL-WIDTH (COL-12) APLICANDO A REGRA DE ALTURA CURTA #}
                     <div class="row justify-content-center pt-2 pb-2">
                         <div class="col-12"> {# LARGURA TOTAL #}
                             <div id="promoCarousel" class="carousel slide promo-carousel-container" data-bs-ride="carousel" data-bs-interval="5000">
@@ -69,159 +68,130 @@
     </div>
     {# FIM HERO SECTION #}
 
-    {# --- NOVO POSICIONAMENTO: TIPS GRATUITAS (SEÇÃO 1) --- #}
     {% if user.is_authenticated %}
         
-        <h2 class="mb-4 text-light">Tips Gratuitas</h2>
+        {# ----------------------------------------------------------- #}
+        {# --- SEÇÃO 1: JOGOS DE HOJE --- #}
+        {# ----------------------------------------------------------- #}
+        {% if tips_categorias.hoje %}
+            <h2 class="mb-4 text-light"><i class="fas fa-calendar-check me-2 text-warning"></i> Jogos de Hoje</h2>
+            <div class="row">
+                {% for tip in tips_categorias.hoje %}
+                    {% include "tips_core/includes/tip_card.html" with tip=tip %}
+                {% endfor %}
+            </div>
+            <hr class="my-5">
+        {% endif %}
+        
+        {# ----------------------------------------------------------- #}
+        {# --- SEÇÃO 2: PRÓXIMOS JOGOS (FUTURO) --- #}
+        {# ----------------------------------------------------------- #}
+        {% if tips_categorias.proximos %}
+            <h2 class="mb-4 text-light"><i class="fas fa-forward me-2 text-info"></i> Próximos Jogos</h2>
+            <div class="row">
+                {% for tip in tips_categorias.proximos %}
+                    {% include "tips_core/includes/tip_card.html" with tip=tip %}
+                {% endfor %}
+            </div>
+            <hr class="my-5">
+        {% endif %}
+        
+        {# ----------------------------------------------------------- #}
+        {# --- SEÇÃO 3: JOGOS PASSADOS (CONCLUÍDOS) --- #}
+        {# ----------------------------------------------------------- #}
+        {% if tips_categorias.concluidos %}
+            <h2 class="mb-4 text-light"><i class="fas fa-history me-2 text-secondary"></i> Jogos Passados (Concluídos)</h2>
+            <div class="row">
+                {% for tip in tips_categorias.concluidos %}
+                    {% include "tips_core/includes/tip_card.html" with tip=tip %}
+                {% endfor %}
+            </div>
+            <hr class="my-5">
+        {% endif %}
 
-        <div class="row">
-            {% for tip in tips %}
-                <div class="col-xl-3 col-lg-4 col-md-6 mb-3"> 
-                    <div class="tip-card p-2 
-                        {% if tip.status == 'WIN' %}win{% elif tip.status == 'LOSS' %}loss{% else %}pending{% endif %}">
-                        
-                        {# TÍTULO E LIGA #}
-                        <h6 class="fw-bold mb-1 text-light">
-                            <i class="fa fa-futbol me-2 text-warning"></i> 
-                            {{ tip.match_title }} 
-                        </h6>
-                        <span class="small text-light">{{ tip.league }}</span>
-                        <hr class="my-1">
-                        
-                        {# DETALHES #}
-                        <p class="small text-light mb-1">
-                            <i class="fa fa-calendar-alt me-2 text-info"></i> 
-                            Data: {{ tip.match_date|date:"d/m/Y H:i" }}
-                        </p>
-                        
-                        <p class="text-light mb-1">
-                            <i class="fa fa-bullseye me-2 text-success"></i> 
-                            <strong>Método:</strong> {{ tip.get_method_display }}
-                        </p>
+        {# ----------------------------------------------------------- #}
+        {# --- SEÇÃO 4: JOGOS PASSADOS (RESULTADO PENDENTE/ERRO) --- #}
+        {# ----------------------------------------------------------- #}
+        {% if tips_categorias.passados %}
+            <h2 class="mb-4 text-light"><i class="fas fa-exclamation-triangle me-2 text-danger"></i> Jogos Passados (Resultado Pendente)</h2>
+            <div class="row">
+                {% for tip in tips_categorias.passados %}
+                    {% include "tips_core/includes/tip_card.html" with tip=tip %}
+                {% endfor %}
+            </div>
+            <hr class="my-5">
+        {% endif %}
 
-                        <p class="text-light mb-2">
-                            <strong>Odd:</strong> 
-                            <span class="odd-badge">{{ tip.odd_value|floatformat:0 }}</span>
-                            Status: <span class="fw-bold">{{ tip.get_status_display }}</span>
-                        </p>
-                        
-                        {# NOVOS CAMPOS FINANCEIROS #}
-                        {% if tip.resultado_final %}
-                        <p class="small text-light mb-1">
-                            <i class="fa fa-trophy me-2 text-warning"></i> 
-                            <strong>Resultado:</strong> {{ tip.resultado_final }}
-                        </p>
-                        {% endif %}
-
-                        <p class="small text-light mb-1">
-                            <i class="fa fa-coins me-2 text-info"></i> 
-                            <strong>Aposta:</strong> R$ {{ tip.valor_aposta|floatformat:2 }}
-                        </p>
-                        {% if tip.valor_ganho %}
-                        <p class="small text-light mb-1">
-                            <i class="fa fa-arrow-up me-2 text-success"></i> 
-                            <strong>Ganho:</strong> R$ {{ tip.valor_ganho|floatformat:2 }}
-                        </p>
-                        {% endif %}
-                        {% if tip.valor_perda %}
-                        <p class="small text-light mb-2">
-                            <i class="fa fa-arrow-down me-2 text-danger"></i> 
-                            <strong>Perda:</strong> R$ {{ tip.valor_perda|floatformat:2 }}
-                        </p>
-                        {% endif %}
-                        
-                        {# BOTÃO DE OCULTAR (DESATIVAR) - SÓ PARA SUPERUSUÁRIOS #}
-                        {% if user.is_superuser %}
-                            <form method="post" action="{% url 'deactivate_tip' tip_id=tip.id %}" style="display: inline;" class="mb-2">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm w-100">
-                                    Ocultar Aposta (Admin) <i class="fa fa-eye-slash"></i>
-                                </button>
-                            </form>
-                        {% endif %}
-
-
-                        {# Botão de Aposta (LINK DIRETO) #}
-                        {% if tip.link_aposta %}
-                            <a href="{{ tip.link_aposta }}" target="_blank" class="btn btn-success btn-sm w-100 mt-auto">
-                                Fazer Aposta Agora! <i class="fa fa-external-link-alt"></i>
-                            </a>
-                        {% endif %}
-
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-        <hr class="my-5">
+        
     {% endif %}
     {# FIM DO BLOCO CONDICIONAL DAS TIPS GRATUITAS #}
 
-    
+
     {# --- BLOCO DE NOTÍCIAS (SEÇÃO 2: LAYOUT DE CARDS VERTICAIS + LISTA LATERAL) --- #}
-{% if noticias %}
-<div class="row mb-5">
-    <h2 class="text-light fw-bold mb-4 border-bottom pb-2">Últimas Notícias e Análises</h2>
+    {% if not user.is_authenticated and noticias %}
+    <div class="row mb-5">
+        <h2 class="text-light fw-bold mb-4 border-bottom pb-2">Últimas Notícias e Análises</h2>
 
-    {# COLUNA ESQUERDA: 8 COLUNAS PARA OS CARDS VERTICAIS #}
-<div class="col-lg-8 mb-4">
-    {# Define o número de notícias verticais #}
-    {% for noticia in noticias|slice:":4" %}
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="tip-card p-3 shadow-lg d-flex flex-row" style="height: 100%;">
-                
-                {# IMAGEM MINIATURA #}
-                <div class="me-3 rounded overflow-hidden flex-shrink-0" style="width: 150px;">
-                    {% if noticia.imagem_url %}
-                        <img src="{{ noticia.imagem_url }}" class="img-fluid" alt="{{ noticia.titulo }}" 
-                            style="object-fit: cover; height: 100px; width: 150px;">
-                    {% else %}
-                        <div class="placeholder-img d-flex align-items-center justify-content-center" style="height: 100px; width: 150px;">
-                            <i class="fa fa-chart-bar fa-2x"></i>
+        {# COLUNA ESQUERDA: 8 COLUNAS PARA OS CARDS VERTICAIS #}
+        <div class="col-lg-8 mb-4">
+            {% for noticia in noticias|slice:":4" %}
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="tip-card p-3 shadow-lg d-flex flex-row" style="height: 100%;">
+                        
+                        {# IMAGEM MINIATURA #}
+                        <div class="me-3 rounded overflow-hidden flex-shrink-0" style="width: 150px;">
+                            {% if noticia.imagem_url %}
+                                <img src="{{ noticia.imagem_url }}" class="img-fluid" alt="{{ noticia.titulo }}" 
+                                    style="object-fit: cover; height: 100px; width: 150px;">
+                            {% else %}
+                                <div class="placeholder-img d-flex align-items-center justify-content-center" style="height: 100px; width: 150px;">
+                                    <i class="fa fa-chart-bar fa-2x"></i>
+                                </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                </div>
 
-                {# CONTEÚDO (Restante da largura) #}
-                <div class="flex-grow-1 d-flex flex-column">
-                    <h6 class="text-warning fw-bold mb-1">{{ noticia.data_publicacao|date:"d/m H:i" }}</h6>
-                    <h5 class="text-light mb-2">{{ noticia.titulo }}</h5>
-                    
-                    {# RESUMO COMPACTO #}
-                    <p class="small text-light mb-3 flex-grow-1" style="overflow: hidden;">
-                        {{ noticia.resumo|safe|truncatechars:180 }}
-                    </p>
-                    
-                    {# LINK DE TEXTO AJUSTADO COM ALINHAMENTO CORRIGIDO #}
-                    <a href="{{ noticia.fonte_url }}" target="_blank" class="text-info small text-decoration-none mt-2 d-flex align-items-center" style="line-height: 1;">
-                        Ler Análise Completa 
-                        <i class="fa fa-external-link-alt ms-1 align-middle"></i>
-                    </a>
+                        {# CONTEÚDO (Restante da largura) #}
+                        <div class="flex-grow-1 d-flex flex-column">
+                            <h6 class="text-warning fw-bold mb-1">{{ noticia.data_publicacao|date:"d/m H:i" }}</h6>
+                            <h5 class="text-light mb-2">{{ noticia.titulo }}</h5>
+                            
+                            {# RESUMO COMPACTO #}
+                            <p class="small text-light mb-3 flex-grow-1" style="overflow: hidden;">
+                                {{ noticia.resumo|safe|truncatechars:180 }}
+                            </p>
+                            
+                            {# LINK DE TEXTO AJUSTADO COM ALINHAMENTO CORRIGIDO #}
+                            <a href="{{ noticia.fonte_url }}" target="_blank" class="text-info small text-decoration-none mt-2 d-flex align-items-center" style="line-height: 1;">
+                                Ler Análise Completa 
+                                <i class="fa fa-external-link-alt ms-1 align-middle"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {# COLUNA DIREITA: 4 COLUNAS PARA A LISTA LATERAL #}
+        <div class="col-lg-4 mb-4">
+            <div class="tip-card p-3 shadow-lg" style="height: 100%;">
+                <h5 class="text-light mb-3 border-bottom pb-2">Outras Notícias (Lista)</h5>
+                {% for noticia in noticias|slice:"4:" %} {# Começa do 5º item (índice 4) em diante #}
+                    <a href="{{ noticia.fonte_url }}" target="_blank" class="d-block text-decoration-none mb-3 border-bottom pb-2">
+                        <h6 class="small text-light mb-1">{{ noticia.titulo|truncatechars:80 }}</h6>
+                        <span class="small text-warning">{{ noticia.data_publicacao|date:"d/m H:i" }}</span>
+                    </a>
+                {% empty %}
+                    <p class="text-secondary small">Nenhuma outra notícia disponível.</p>
+                {% endfor %}
             </div>
         </div>
     </div>
-    {% endfor %}
-</div>
-    
-    {# COLUNA DIREITA: 4 COLUNAS PARA A LISTA LATERAL #}
-    <div class="col-lg-4 mb-4">
-        <div class="tip-card p-3 shadow-lg" style="height: 100%;">
-            <h5 class="text-light mb-3 border-bottom pb-2">Outras Notícias (Lista)</h5>
-            {% for noticia in noticias|slice:"4:" %} {# Começa do 5º item (índice 4) em diante #}
-                <a href="{{ noticia.fonte_url }}" target="_blank" class="d-block text-decoration-none mb-3 border-bottom pb-2">
-                    <h6 class="small text-light mb-1">{{ noticia.titulo|truncatechars:80 }}</h6>
-                    <span class="small text-warning">{{ noticia.data_publicacao|date:"d/m H:i" }}</span>
-                </a>
-            {% empty %}
-                <p class="text-secondary small">Nenhuma outra notícia disponível.</p>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-<hr class="my-5">
-{% endif %}
-{# --- FIM BLOCO DE NOTÍCIAS --- #}
+    <hr class="my-5">
+    {% endif %}
+    {# --- FIM BLOCO DE NOTÍCIAS --- #}
+
 
     <div class="text-center p-3 hero-section-card rounded">
         <h3 class="fw-bold text-light">Aumente seus Ganhos com o Premium</h3>

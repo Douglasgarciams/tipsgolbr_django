@@ -1,0 +1,74 @@
+<div class="col-xl-3 col-lg-4 col-md-6 mb-3"> 
+    <div class="tip-card p-2 
+        {% if tip.status == 'WIN' %}win{% elif tip.status == 'LOSS' %}loss{% else %}pending{% endif %}">
+        
+        {# TÍTULO E LIGA #}
+        <h6 class="fw-bold mb-1 text-light">
+            <i class="fa fa-futbol me-2 text-warning"></i> 
+            {{ tip.match_title }} 
+        </h6>
+        <span class="small text-light">{{ tip.league }}</span>
+        <hr class="my-1">
+        
+        {# DETALHES #}
+        <p class="small text-light mb-1">
+            <i class="fa fa-calendar-alt me-2 text-info"></i> 
+            Data: {{ tip.match_date|date:"d/m/Y H:i" }}
+        </p>
+        
+        <p class="text-light mb-1">
+            <i class="fa fa-bullseye me-2 text-success"></i> 
+            <strong>Método:</strong> {{ tip.get_method_display }}
+        </p>
+
+        <p class="text-light mb-2">
+            <strong>Odd:</strong> 
+            <span class="odd-badge">{{ tip.odd_value|floatformat:0 }}</span>
+            Status: <span class="fw-bold">{{ tip.get_status_display }}</span>
+        </p>
+        
+        {# NOVOS CAMPOS FINANCEIROS #}
+        {% if tip.resultado_final %}
+        <p class="small text-light mb-1">
+            <i class="fa fa-trophy me-2 text-warning"></i> 
+            <strong>Resultado:</strong> {{ tip.resultado_final }}
+        </p>
+        {% endif %}
+
+        <p class="small text-light mb-1">
+            <i class="fa fa-coins me-2 text-info"></i> 
+            <strong>Aposta:</strong> R$ {{ tip.valor_aposta|floatformat:2 }}
+        </p>
+        {% if tip.valor_ganho %}
+        <p class="small text-light mb-1">
+            <i class="fa fa-arrow-up me-2 text-success"></i> 
+            <strong>Ganho:</strong> R$ {{ tip.valor_ganho|floatformat:2 }}
+        </p>
+        {% endif %}
+        {% if tip.valor_perda %}
+        <p class="small text-light mb-2">
+            <i class="fa fa-arrow-down me-2 text-danger"></i> 
+            <strong>Perda:</strong> R$ {{ tip.valor_perda|floatformat:2 }}
+        </p>
+        {% endif %}
+        
+        {# BOTÃO DE OCULTAR (DESATIVAR) - SÓ PARA SUPERUSUÁRIOS #}
+        {% if user.is_superuser %}
+            <form method="post" action="{% url 'deactivate_tip' tip_id=tip.id %}" style="display: inline;" class="mb-2">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm w-100">
+                    Ocultar Aposta (Admin) <i class="fa fa-eye-slash"></i>
+                </button>
+            </form>
+        {% endif %}
+
+
+        {# Botão de Aposta (LINK DIRETO) #}
+        {% if tip.link_aposta %}
+            <a href="{{ tip.link_aposta }}" target="_blank" class="btn btn-success btn-sm w-100 mt-auto">
+                Fazer Aposta Agora! <i class="fa fa-external-link-alt"></i>
+            </a>
+        {% endif %}
+
+    </div>
+</div>
