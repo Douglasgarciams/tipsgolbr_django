@@ -1,88 +1,166 @@
 {% extends 'base.html' %}
 
-{% block title %}Calculadora Dutching{% endblock %}
+{% block title %}Calculadora Dutching & Simulador Simples{% endblock %}
 
 {% block content %}
+    
+    {# --- DEPENDÊNCIAS JAVASCRIPT --- #}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    
+    <style>
+        /* Estilos CSS (Corrigidos para o seu layout) */
+        :root {
+            --dark-bg: #0c0c0c;
+            --card-bg: #2b2b2b;
+            --primary-color: #ffc107;
+            --info: #17a2b8;
+            --success: #198754;
+            --loss: #dc3545;
+        }
+        .card { background-color: var(--card-bg) !important; border: 1px solid var(--primary-color) !important; color: #f8f9fa !important; }
+        .bg-dark { background-color: #333 !important; }
+        .text-info { color: var(--info) !important; }
+        .text-win { color: var(--success) !important; }
+        .text-loss { color: var(--loss) !important; }
+        .input-group-text { background-color: #3a3a3a; color: #f8f9fa; border-color: #4a4a4a; }
+        .form-control { background-color: #4a4a3a; color: #f8f9fa; border-color: #4a4a4a; }
+        .hidden { display: none !important; }
+        /* Estilos para o Sistema de Abas */
+        .tab-button { transition: background-color 0.3s, color 0.3s; border: 1px solid var(--primary-color); }
+        .tab-button.active { background-color: var(--primary-color); color: #1a1a1a !important; font-weight: 700; }
+        .tab-content { display: none; }
+
+        /* Estilos para o Layout de Odds Dutching */
+        .label-odd { font-weight: bold; color: var(--primary-color); min-width: 60px; text-align: right; padding-right: 10px; font-size: small; }
+        #oddsContainer .col-12 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; } 
+        #oddsContainer .form-control { width: 90px !important; margin: 0 10px 0 0; text-align: right; padding: 5px; } 
+        #oddsContainer .odd-input-row span.fw-bold { font-size: small; color: var(--info) !important; min-width: 80px; text-align: right; }
+
+        /* NOVOS ESTILOS PARA COMPACTAR A TABELA DO SIMULADOR */
+        #simuladorResultados table {
+            width: 100%;
+            table-layout: fixed; /* Força o uso das larguras definidas */
+        }
+
+        #simuladorResultados th,
+        #simuladorResultados td {
+            padding: 0.5rem 0.3rem !important; /* Reduz o padding */
+            font-size: 0.85rem; /* Diminui a fonte levemente */
+        }
+
+        #simuladorResultados th:nth-child(1), 
+        #simuladorResultados td:nth-child(1) {
+            width: 10%; /* Dia */
+            text-align: center;
+        }
+
+        #simuladorResultados th:nth-child(2), 
+        #simuladorResultados td:nth-child(2),
+        #simuladorResultados th:nth-child(3), 
+        #simuladorResultados td:nth-child(3),
+        #simuladorResultados th:nth-child(4), 
+        #simuladorResultados td:nth-child(4) {
+            width: 30%; /* As colunas de R$ compartilham o restante */
+            text-align: right; /* Alinha os valores monetários à direita */
+        }
+    </style>
+
     <div class="container my-4">
-        <h1 class="text-center text-light mb-4">Calculadora Dutching (Stake Total Fixa)</h1>
+        <h1 class="text-center text-light mb-4"><i class="fas fa-calculator me-2"></i> Ferramentas de Gestão</h1>
+
+        {# SISTEMA DE ABAS #}
+        <div class="d-flex justify-content-center mb-5">
+            <button class="tab-button btn btn-dark" onclick="showTool('simulador')">
+                <i class="fas fa-chart-line me-1"></i> Simulador de Stake
+            </button>
+            <button class="tab-button btn btn-dark active ms-2" onclick="showTool('dutching')">
+                <i class="fas fa-percent me-1"></i> Calculadora Dutching
+            </button>
+        </div>
         
-        <div class="row justify-content-center">
-            {# ALTERADO PARA COL-LG-12 PARA USAR A LARGURA MÁXIMA #}
-            <div class="col-lg-12"> 
-                
-                <div class="row">
+        
+        {# --- 1. CALCULADORA DUTCHING (CONTEÚDO ORIGINAL) --- #}
+        <div id="dutching" class="tab-content" style="display: block;">
+            
+            <h2 class="text-center text-warning mb-4">Calculadora Dutching (Stake Total Fixa)</h2>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-12"> 
                     
-                    {# COLUNA 1: ENTRADA DE DADOS E ODDS (50%) #}
-                    <div class="col-md-6 mb-4">
-                        <div class="card p-4 h-100">
-                            
-                            <h4 class="text-warning mb-3"><i class="fas fa-money-bill-wave me-2"></i> Stake Total a Distribuir</h4>
-                            <div class="row g-3 mb-4">
+                    <div class="row">
+                        
+                        {# COLUNA 1: ENTRADA DE DADOS E ODDS (50%) #}
+                        <div class="col-md-6 mb-4">
+                            <div class="card p-4 h-100">
                                 
-                                <!-- Valor Total da Stake -->
-                                <div class="col-12">
-                                    <label for="totalStake" class="form-label">Valor Total (Stake)</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">R$</span>
-                                        <input type="number" id="totalStake" class="form-control" value="1000.00" min="1" step="0.01" oninput="calculateDutching()">
+                                <h4 class="text-warning mb-3"><i class="fas fa-money-bill-wave me-2"></i> Stake Total a Distribuir</h4>
+                                <div class="row g-3 mb-4">
+                                    
+                                    <div class="col-12">
+                                        <label for="totalStake" class="form-label">Valor Total (Stake)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">R$</span>
+                                            <input type="number" id="totalStake" class="form-control" value="1000.00" min="1" step="0.01" oninput="calculateDutching()">
+                                        </div>
+                                        <small class="text-secondary">Este valor será dividido entre todas as apostas.</small>
                                     </div>
-                                    <small class="text-secondary">Este valor será dividido entre todas as apostas.</small>
                                 </div>
-                            </div>
-                            
-                            <h4 class="text-warning mb-3"><i class="fas fa-percent me-2"></i> Odds de Entrada</h4>
-                            
-                            {# ESTRUTURA PARA DUAS COLUNAS DE ODDS #}
-                            <div id="oddsContainer" class="row">
-                                <div id="leftColumn" class="col-6">
-                                    {# Odds 1-6 serão renderizadas aqui #}
+                                
+                                <h4 class="text-warning mb-3"><i class="fas fa-percent me-2"></i> Odds de Entrada</h4>
+                                
+                                {# ESTRUTURA PARA DUAS COLUNAS DE ODDS #}
+                                <div id="oddsContainer" class="row">
+                                    <div id="leftColumn" class="col-6">
+                                        {# Odds 1-6 serão renderizadas aqui #}
+                                    </div>
+                                    <div id="rightColumn" class="col-6">
+                                        {# Odds 7-12 serão renderizadas aqui #}
+                                    </div>
                                 </div>
-                                <div id="rightColumn" class="col-6">
-                                    {# Odds 7-12 serão renderizadas aqui #}
-                                </div>
-                            </div>
 
-                            <div class="d-flex justify-content-between mt-3">
-                                <button class="btn btn-secondary btn-sm" onclick="addOddInput()">
-                                    <i class="fas fa-plus me-1"></i> Adicionar Odd
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" onclick="removeOddInput()">
-                                    <i class="fas fa-minus me-1"></i> Remover Última
-                                </button>
-                            </div>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button class="btn btn-secondary btn-sm" onclick="addOddInput()">
+                                        <i class="fas fa-plus me-1"></i> Adicionar Odd
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="removeOddInput()">
+                                        <i class="fas fa-minus me-1"></i> Remover Última
+                                    </button>
+                                </div>
 
+                            </div>
                         </div>
-                    </div>
-                    
-                    {# COLUNA 2: RESUMO FINANCEIRO E STAKES INDIVIDUAIS (50%) #}
-                    <div class="col-md-6 mb-4">
-                        <div class="card p-4 h-100 d-flex flex-column">
-                            <h4 class="text-warning mb-4"><i class="fas fa-calculator me-2"></i> Resumo Financeiro</h4>
-                            
-                            <div id="resultsSection" class="flex-grow-1">
-                                <div class="mb-3 p-3 bg-dark rounded">
-                                    <div class="row">
-                                        <div class="col-md-6 mb-2 mb-md-0">
-                                            <p class="mb-1 fw-bold text-secondary">Ganhos se qualquer Aposta Vencer:</p>
-                                            <h4 id="totalPayout" class="fw-bold text-light">R$ 0,00</h4>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <p class="mb-1 fw-bold text-secondary">Lucro Líquido Garantido:</p>
-                                            <h4 id="netProfit" class="fw-bold text-win">R$ 0,00</h4>
+                        
+                        {# COLUNA 2: RESUMO FINANCEIRO E STAKES INDIVIDUAIS (50%) #}
+                        <div class="col-md-6 mb-4">
+                            <div class="card p-4 h-100 d-flex flex-column">
+                                <h4 class="text-warning mb-4"><i class="fas fa-calculator me-2"></i> Resumo Financeiro</h4>
+                                
+                                <div id="resultsSection" class="flex-grow-1">
+                                    <div class="mb-3 p-3 bg-dark rounded">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2 mb-md-0">
+                                                <p class="mb-1 fw-bold text-secondary">Ganhos se qualquer Aposta Vencer:</p>
+                                                <h4 id="totalPayout" class="fw-bold text-light">R$ 0,00</h4>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p class="mb-1 fw-bold text-secondary">Lucro Líquido Garantido:</p>
+                                                <h4 id="netProfit" class="fw-bold text-win">R$ 0,00</h4>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <h5 class="text-warning mt-4 mb-3"><i class="fas fa-hand-holding-usd me-2"></i> Stakes Individuais</h5>
+                                    
+                                    <h5 class="text-warning mt-4 mb-3"><i class="fas fa-hand-holding-usd me-2"></i> Stakes Individuais</h5>
 
-                                <div id="stakesResults" class="mt-2 pt-3 border-top border-secondary p-3 bg-dark rounded">
-                                    <p class="text-secondary small mb-0">Valores de aposta por Odd serão listados aqui.</p>
-                                </div>
-                                
-                                <div class="mt-4 pt-3 border-top border-secondary">
-                                    <p class="mb-0 fw-bold">Soma das Stakes Distribuídas:</p>
-                                    <h4 id="totalStakeDistributed" class="text-light">R$ 0,00</h4>
-                                    <p class="text-danger small" id="stakeDifferenceAlert" style="display: none;">A soma das Stakes não totaliza o Valor Total inserido. Ajuste as Odds ou o Valor Total.</p>
+                                    <div id="stakesResults" class="mt-2 pt-3 border-top border-secondary p-3 bg-dark rounded">
+                                        <p class="text-secondary small mb-0">Valores de aposta por Odd serão listados aqui.</p>
+                                    </div>
+                                    
+                                    <div class="mt-4 pt-3 border-top border-secondary">
+                                        <p class="mb-0 fw-bold">Soma das Stakes Distribuídas:</p>
+                                        <h4 id="totalStakeDistributed" class="text-light">R$ 0,00</h4>
+                                        <p class="text-danger small" id="stakeDifferenceAlert" style="display: none;">A soma das Stakes não totaliza o Valor Total inserido. Ajuste as Odds ou o Valor Total.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -90,60 +168,197 @@
                 </div>
             </div>
         </div>
+
+        {# --- 2. SIMULADOR DE BANCA (SEÇÃO NOVA) --- #}
+        <div id="simulador" class="tab-content">
+            <div class="row justify-content-center">
+                <div class="col-lg-12">
+                    <div class="row">
+
+                        {# FORMULÁRIO DE ENTRADA DO SIMULADOR (LAY FOCADO) #}
+                        <div class="col-md-4 mb-4">
+                            <div class="card p-4 h-100">
+                                <h4 class="text-warning mb-3"><i class="fas fa-money-check-alt me-2"></i> Parâmetros de Simulação</h4>
+                                
+                                
+                                <div class="mb-3 hidden">
+                                    <label for="simuladorBancaInicial" class="form-label">Banca Total (R$)</label>
+                                    <input type="number" id="simuladorBancaInicial" value="10000.00" min="100" step="0.01" class="form-control">
+                                </div>
+
+                                <div class="mb-3 hidden">
+                                    <label for="simuladorMetaFinal" class="form-label">Meta Final (R$)</label>
+                                    <input type="number" id="simuladorMetaFinal" value="20000.00" min="1" step="0.01" class="form-control">
+                                </div>
+
+                                {# NOVO SELETOR DE MODALIDADE #}
+                                <div class="mb-3">
+                                    <label for="simuladorModalidade" class="form-label small">Modalidade de Aposta</label>
+                                    <select id="simuladorModalidade" class="form-select" oninput="calcularLucroLay()">
+                                        <option value="LAY" selected>LAY (Contra) - Juros Compostos</option>
+                                        <option value="BACK">BACK (A Favor) - Stake Fixa</option>
+                                    </select>
+                                </div>
+
+
+                                <div class="mb-3">
+                                    <label for="simuladorStakeFixa" class="form-label">Stake por Entrada (R$)</label>
+                                    <input type="number" id="simuladorStakeFixa" class="form-control" value="1000.00" min="1" step="0.01" oninput="calcularLucroLay()">
+                                    <small class="text-secondary">A Stake será **fixa no BACK** ou **ajustada no LAY**.</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="simuladorOddEntrada" class="form-label">Odd de Entrada</label>
+                                    <input type="number" id="simuladorOddEntrada" value="1.80" min="1.01" step="0.01" class="form-control" oninput="calcularLucroLay()">
+                                </div>
+
+                                {# CAMPO DE LUCRO CALCULADO EM TEMPO REAL #}
+                                <div class="mb-3 p-2 bg-dark rounded">
+                                    <p class="mb-1 fw-bold text-secondary small">Lucro Líquido por Green (R$):</p>
+                                    <h5 id="lucroCalculadoLay" class="fw-bold text-success">R$ 0.00</h5>
+                                </div>
+
+
+                                <h5 class="text-warning mt-4 mb-2">Simulação de Risco</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="simuladorWinRate" class="form-label small">Relação Win : Loss</label>
+                                    <select id="simuladorWinRate" class="form-select">
+                                        <option value="1:0">100% Win (Otimista)</option>
+                                        <option value="2:1">2 Greens : 1 Red</option>
+                                        <option value="3:1">3 Greens : 1 Red</option>
+                                        <option value="4:1">4 Greens : 1 Red</option>
+                                        <option value="5:1">5 Greens : 1 Red</option>
+                                        <option value="6:1">6 Greens : 1 Red</option>
+                                        <option value="7:1">7 Greens : 1 Red</option>
+                                        <option value="8:1">8 Greens : 1 Red</option>
+                                        <option value="9:1">9 Greens : 1 Red</option>
+                                        <option value="10:1" selected>10 Greens : 1 Red</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="simuladorLossPercent" class="form-label small">% de Prejuízo no Red (5% a 30%)</label>
+                                    <select id="simuladorLossPercent" class="form-select" oninput="calcularLucroLay()">
+                                        <option value="5">5% (Stop-Loss sobre a Stake)</option>
+                                        <option value="10" selected>10% (Stop-Loss sobre a Stake)</option>
+                                        <option value="15">15% (Stop-Loss sobre a Stake)</option>
+                                        <option value="20">20% (Stop-Loss sobre a Stake)</option>
+                                        <option value="25">25% (Stop-Loss sobre a Stake)</option>
+                                        <option value="30">30% (Stop-Loss sobre a Stake)</option>
+                                    </select>
+                                    <small class="text-secondary">Percentual da **stake atual** perdida no dia do Red.</small>
+                                </div>
+                                
+                                <button id="iniciarSimuladorButton" class="btn btn-warning btn-lg fw-bold w-100 mt-auto">
+                                    <i class="fas fa-play me-2"></i> Iniciar Simulação
+                                </button>
+                            </div>
+                        </div>
+
+                        {# RESULTADOS E GRÁFICO DO SIMULADOR #}
+                        <div class="col-md-8 mb-4">
+                            <div class="card p-4 h-100 d-flex flex-column">
+                                <h4 class="text-warning mb-4"><i class="fas fa-chart-area me-2"></i> Evolução da Stake Base (365 Dias)</h4>
+                                
+                                <div id="simuladorLoading" class="text-center py-5 hidden">
+                                    <i class="fas fa-spinner fa-spin text-warning fa-3x"></i>
+                                    <p class="text-secondary mt-2">Calculando a evolução da stake...</p>
+                                </div>
+
+                                <div id="simuladorResultados" class="flex-grow-1 hidden">
+                                    
+                                    {# RESUMO GERAL SIMULADOR #}
+                                    <div class="row mb-4">
+                                        <div class="col-md-4 mb-2">
+                                            <p class="mb-1 fw-bold text-secondary">Dias Simulados:</p>
+                                            <h4 id="simuladorDiasNecessarios" class="fw-bold text-warning">0</h4>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
+                                            <p class="mb-1 fw-bold text-secondary">Crescimento da Stake:</p>
+                                            <h4 id="simuladorLucroTotal" class="fw-bold text-success">0%</h4>
+                                        </div>
+                                         <div class="col-md-4 mb-2">
+                                            <p class="mb-1 fw-bold text-secondary">Perda Fixa por Red (X% sobre Stake):</p>
+                                            <h4 id="simuladorPrejuizoRedDisplay" class="fw-bold text-danger">R$ 0.00</h4>
+                                        </div>
+                                    </div>
+                                    
+                                    {# GRÁFICO #}
+                                    <div class="mb-4 p-3 bg-dark rounded">
+                                        <h5 class="text-light mb-2">Curva de Crescimento da Stake</h5>
+                                        <div style="height: 250px;">
+                                            <canvas id="curvaCrescimentoSimulador"></canvas>
+                                        </div>
+                                    </div>
+
+                                    {# TABELA DETALHADA SIMULADOR #}
+                                    <h5 class="text-warning mt-4 mb-3">Histórico Detalhado</h5>
+                                    <div class="overflow-y-auto" style="max-height: 200px;">
+                                        <table class="table table-dark table-striped table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Dia</th>
+                                                    <th>Stake Início (R$)</th>
+                                                    <th>Resultado (R$)</th>
+                                                    <th>Stake Final (R$)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="simuladorTabelaCorpo">
+                                                </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                {# MENSAGEM DE ERRO/AVISO #}
+                                <div id="simuladorMensagem" class="alert mt-3 text-center hidden" role="alert"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
     </div>
 
-    <!-- CÓDIGO JS E CSS DA CALCULADORA -->
-    <style>
-        :root {
-            --dark-bg: #0c0c0c;
-            --card-bg: #2b2b2b;
-            --primary-color: #ffc107;
-        }
-        /* Estilos Específicos para a Calculadora */
-        .card { background-color: var(--card-bg); }
-        .bg-dark { background-color: #333 !important; }
-        .input-group-text { background-color: #3a3a3a; color: #f8f9fa; border-color: #4a4a4a; }
-        .form-control { background-color: #4a4a4a; color: #f8f9fa; border-color: #4a4a4a; }
-        
-        /* Ajuste para o label de Odd ficar menor */
-        .label-odd {
-            font-weight: bold;
-            color: var(--primary-color);
-            min-width: 60px;
-            text-align: right;
-            padding-right: 10px;
-            font-size: small;
-        }
-        /* Garantir que as colunas internas de Odds sejam compactas */
-        #oddsContainer .odd-input-row { margin-bottom: 5px; }
-        #oddsContainer .label-odd { font-size: small; }
-        
-        /* Centraliza os elementos dentro da linha de Odd */
-        /* CORREÇÃO: Usamos flex para alinhar e justificar */
-        #oddsContainer .col-12 { 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; /* Espaçamento entre os elementos */
-        } 
-        
-        /* CORREÇÃO PRINCIPAL: AUMENTANDO A LARGURA DO INPUT DE ODD */
-        #oddsContainer .form-control { 
-            width: 90px !important; /* 90px deve acomodar 4-5 dígitos */
-            margin: 0 10px 0 0; /* Margem direita para separar do valor da stake */
-            text-align: right; /* Alinha o texto do input à direita (para valores) */
-        } 
-        
-        /* Alinhamento do valor da stake ao lado do input */
-        #oddsContainer .odd-input-row span.fw-bold { 
-            font-size: small;
-            color: #17a2b8 !important; 
-            min-width: 80px; /* Aumenta a largura mínima do valor da Stake para R$XXX.XX */
-            text-align: right; /* Alinha o valor da Stake à direita */
-        }
-    </style>
-    
+    {# --- SCRIPTS GERAIS --- #}
     <script>
-        // Variáveis globais
+        Chart.register(ChartDataLabels);
+        
+        // --- Variáveis Globais de Cores e Formatação ---
+        const COLOR_SUCCESS = '#198754';
+        const COLOR_LOSS = '#dc3545';
+        const COLOR_PRIMARY = '#ffc107';
+        // Função de formatação para R$
+        const R = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+
+        // ######################################################################
+        // --- LÓGICA DE ABAS (Alternância) ---
+        // ######################################################################
+        function showTool(toolId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            document.getElementById(toolId).style.display = 'block';
+
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.tab-button[onclick="showTool('${toolId}')"]`).classList.add('active');
+
+            // Inicialização específica
+            if (toolId === 'dutching') {
+                calculateDutching();
+            } else if (toolId === 'simulador') {
+                 // Limpa o display do simulador e calcula o lucro inicial do LAY
+                 document.getElementById('simuladorResultados').classList.add('hidden');
+                 calcularLucroLay(); // Executa o cálculo inicial para preencher o campo de lucro
+            }
+        }
+
+        // --- LÓGICA DA CALCULADORA DUTCHING (PRESERVADA) ---
+        // Variáveis globais Dutching
         const totalStakeInput = document.getElementById('totalStake');
         const totalPayoutDisplay = document.getElementById('totalPayout');
         const netProfitDisplay = document.getElementById('netProfit');
@@ -153,130 +368,90 @@
         const leftColumn = document.getElementById('leftColumn');
         const rightColumn = document.getElementById('rightColumn');
 
-        const initialOddsValues = []; // Começa vazio por padrão
         let oddCounter = 0; 
 
-        // Função que renderiza todos os inputs (1 a 12) em DUAS COLUNAS
         function renderOdds() {
-            leftColumn.innerHTML = '';
-            rightColumn.innerHTML = '';
-            
-            // Renderiza 12 slots de input, todos desabilitados no início
+            leftColumn.innerHTML = ''; rightColumn.innerHTML = '';
+            const initialVisibleOdds = 3; 
+
             for (let i = 1; i <= 12; i++) {
                 const newRow = document.createElement('div');
                 newRow.className = 'odd-input-row row g-3 align-items-center';
                 newRow.id = `row${i}`;
                 
                 const targetColumn = (i <= 6) ? leftColumn : rightColumn;
+                const isDisabled = (i > initialVisibleOdds); 
                 
-                const isDisabled = (i > 3); 
+                let defaultValue = '';
+                if (i === 1) defaultValue = '2.50';
+                if (i === 2) defaultValue = '4.00';
+                if (i === 3) defaultValue = '8.00';
                 
                 newRow.innerHTML = `
                     <div class="col-12">
                         <label class="label-odd" for="odd${i}">Aposta ${i}:</label>
                         <input type="number" id="odd${i}" class="form-control odd-input" 
-                               value="" 
-                               min="1.01" step="0.01" 
-                               oninput="calculateDutching()" 
-                               ${isDisabled ? 'disabled' : ''}>
+                                value="${defaultValue}" 
+                                min="1.01" step="0.01" 
+                                oninput="calculateDutching()" 
+                                ${isDisabled ? 'disabled' : ''}>
                         <span id="stakeDisplay${i}" class="fw-bold text-info small ms-2"></span>
                     </div>
                 `;
                 targetColumn.appendChild(newRow);
             }
-            
-            oddCounter = 3; 
+            oddCounter = initialVisibleOdds; 
         }
 
-        // Adiciona um novo campo de Odd
         function addOddInput() {
-            if (oddCounter >= 12) {
-                alert('O limite é de 12 Odds.');
-                return;
-            }
+            if (oddCounter >= 12) { console.log('O limite é de 12 Odds.'); return; }
             oddCounter++;
             const newOddId = oddCounter;
-            
             const input = document.getElementById(`odd${newOddId}`);
-            if (input) {
-                input.disabled = false;
-                input.value = '';
-            }
+            if (input) { input.disabled = false; input.value = ''; input.focus(); }
             calculateDutching();
         }
 
-        // Remove o último campo de Odd
         function removeOddInput() {
-            if (oddCounter <= 1) { 
-                alert('É necessário manter pelo menos 1 slot de Odd visível.');
-                return;
-            }
-            
+            if (oddCounter <= 1) { console.log('É necessário manter pelo menos 1 slot de Odd visível.'); return; }
             const input = document.getElementById(`odd${oddCounter}`);
-            if (input) {
-                input.value = '';
-                input.disabled = true;
-            }
+            if (input) { input.value = ''; input.disabled = true; }
             document.getElementById(`stakeDisplay${oddCounter}`).textContent = '';
-
             oddCounter--;
             calculateDutching();
         }
 
-        // Função principal de cálculo Dutching
         function calculateDutching() {
             const totalStake = parseFloat(totalStakeInput.value) || 0;
             const oddInputs = [];
             
             for (let i = 1; i <= oddCounter; i++) {
                 const inputElement = document.getElementById(`odd${i}`);
-                
                 if (inputElement && !inputElement.disabled) {
-                    
-                    if (inputElement.value.trim() === '') {
-                        document.getElementById(`stakeDisplay${i}`).textContent = '';
-                        continue; 
-                    }
-                    
+                    if (inputElement.value.trim() === '') { document.getElementById(`stakeDisplay${i}`).textContent = ''; continue; }
                     const oddValue = parseFloat(inputElement.value);
-                    
                     if (!isNaN(oddValue) && oddValue > 1.0) {
                         oddInputs.push({ odd: oddValue, index: i });
                     } else {
-                        stakeDifferenceAlert.textContent = `Erro: Aposta ${i} (Odd ${inputElement.value}) deve ser maior que 1.0.`;
+                        stakeDifferenceAlert.textContent = `Erro: Aposta ${i} (Odd ${inputElement.value}) deve ser um número maior que 1.0.`;
                         stakeDifferenceAlert.style.display = 'block';
-                        renderIndividualStakes([], 0, 0); 
-                        return;
+                        renderIndividualStakes([], 0, 0); return;
                     }
                 }
             }
             
-            // Validação Crucial: 1 Odd Válida e Stake Total > 0
             if (oddInputs.length < 1 || totalStake <= 0) {
-                if (oddInputs.length < 1 && totalStake > 0) {
-                     stakeDifferenceAlert.textContent = 'Insira pelo menos 1 Odd válida.';
-                     stakeDifferenceAlert.style.display = 'block';
-                } else {
-                     stakeDifferenceAlert.style.display = 'none';
-                }
-                
-                // Limpa displays de resultado
-                for (let i = 1; i <= 12; i++) {
-                    const stakeSpan = document.getElementById(`stakeDisplay${i}`);
-                    if(stakeSpan) stakeSpan.textContent = '';
-                }
-                totalPayoutDisplay.textContent = 'R$ 0.00';
-                netProfitDisplay.textContent = 'R$ 0.00';
-                totalStakeDistributedDisplay.textContent = 'R$ 0.00';
+                stakeDifferenceAlert.style.display = 'none'; 
+                totalPayoutDisplay.textContent = 'R$ 0,00'; netProfitDisplay.textContent = 'R$ 0,00'; netProfitDisplay.className = 'fw-bold';
+                totalStakeDistributedDisplay.textContent = 'R$ 0,00';
                 renderIndividualStakes([], 0, 0);
                 return;
             }
             
             stakeDifferenceAlert.style.display = 'none'; 
-
-            // Cálculo Dutching
+            
             const sumOfInverses = oddInputs.reduce((sum, item) => sum + (1 / item.odd), 0);
-            const totalPayout = totalStake / sumOfInverses;
+            const totalPayout = totalStake / sumOfInverses; 
             let totalActualStake = 0;
             
             oddInputs.forEach(item => {
@@ -287,23 +462,23 @@
 
             const netProfit = totalPayout - totalStake;
             
-            // 5. Atualiza o Resumo
             totalPayoutDisplay.textContent = `R$ ${totalPayout.toFixed(2)}`;
             netProfitDisplay.textContent = `R$ ${netProfit.toFixed(2)}`;
-            netProfitDisplay.className = netProfit >= 0 ? 'text-win fw-bold' : 'text-loss fw-bold';
+            netProfitDisplay.className = netProfit >= 0 ? 'text-win fw-bold' : netProfit < 0 ? 'text-loss fw-bold' : 'text-secondary fw-bold';
             
             totalStakeDistributedDisplay.textContent = `R$ ${totalActualStake.toFixed(2)}`;
             
             const difference = Math.abs(totalActualStake - totalStake);
             if (difference > 0.01) { 
-                stakeDifferenceAlert.textContent = `Atenção: A soma das Stakes (R$ ${totalActualStake.toFixed(2)}) é diferente da Stake Total (R$ ${totalStake.toFixed(2)}).`;
+                stakeDifferenceAlert.textContent = `Atenção: A soma das Stakes (R$ ${totalActualStake.toFixed(2)}) é diferente da Stake Total (R$ ${totalStake.toFixed(2)}) devido ao arredondamento.`;
                 stakeDifferenceAlert.style.display = 'block';
+            } else {
+                stakeDifferenceAlert.style.display = 'none';
             }
             
             renderIndividualStakes(oddInputs, totalPayout, totalStake);
         }
         
-        // Função para renderizar as stakes individuais na área de resultado
         function renderIndividualStakes(oddInputs, totalPayout, totalStake) {
             let resultsHTML = '';
             
@@ -329,9 +504,268 @@
             stakesResults.innerHTML = resultsHTML;
         }
 
+
+        // ######################################################################
+        // --- 2. LÓGICA DO SIMULADOR DE STAKE (LAY/BACK FOCADO) ---
+        // ######################################################################
+        
+        let simuladorChartInstance = null; 
+        
+        // CORRIGIDO: Função para calcular lucro LAY ou BACK e Prejuízo por Red (Stop-Loss)
+        function calcularLucroLay() {
+            const stakeFixa = parseFloat(document.getElementById('simuladorStakeFixa').value);
+            const oddEntrada = parseFloat(document.getElementById('simuladorOddEntrada').value);
+            const lossPercentValue = parseFloat(document.getElementById('simuladorLossPercent').value) / 100;
+            const modalidade = document.getElementById('simuladorModalidade').value; 
+            
+            const displayLucro = document.getElementById('lucroCalculadoLay');
+            const displayPrejuizoRed = document.getElementById('simuladorPrejuizoRedDisplay');
+            
+            if (isNaN(stakeFixa) || isNaN(oddEntrada) || oddEntrada <= 1.0 || stakeFixa <= 0) {
+                 displayLucro.textContent = 'R$ 0.00';
+                 displayPrejuizoRed.textContent = 'R$ 0.00';
+                 return;
+            }
+            
+            let lucroCalculado;
+
+            if (modalidade === 'LAY') {
+                lucroCalculado = stakeFixa / (oddEntrada - 1);
+            } else { // Modalidade === 'BACK'
+                lucroCalculado = stakeFixa * (oddEntrada - 1);
+            }
+
+            const prejuizoRed = stakeFixa * lossPercentValue;
+            
+            // Atualiza o display do Green/Lucro
+            displayLucro.textContent = R(lucroCalculado);
+
+            // Atualiza o display do Red/Stop-Loss
+            displayPrejuizoRed.textContent = R(prejuizoRed);
+
+            // Atualiza o rótulo do display de Red para refletir a % atual
+            document.querySelector('#simuladorResultados .row .col-md-4:last-child p').textContent = `Perda Fixa por Red (${(lossPercentValue * 100).toFixed(0)}% sobre Stake):`;
+
+        }
+
+        // CORRIGIDO: Função principal de simulação (Lógica LAY/BACK integrada)
+        function simular() {
+            
+            const modalidade = document.getElementById('simuladorModalidade').value;
+            const maxDias = 365; // Limite de 365 dias.
+
+            const stakeFixa = parseFloat(document.getElementById('simuladorStakeFixa').value);
+            const oddEntrada = parseFloat(document.getElementById('simuladorOddEntrada').value);
+            const winRateStr = document.getElementById('simuladorWinRate').value;
+            const lossPercent = parseFloat(document.getElementById('simuladorLossPercent').value) / 100; 
+
+            const [winsPerCycle, lossesPerCycle] = winRateStr.split(':').map(Number);
+            const cycleLength = winsPerCycle + lossesPerCycle;
+
+            const resultadosDiv = document.getElementById('simuladorResultados');
+            const tabelaCorpo = document.getElementById('simuladorTabelaCorpo');
+            const mensagemDiv = document.getElementById('simuladorMensagem');
+            const loadingDiv = document.getElementById('simuladorLoading');
+
+            // Validação básica
+            if (isNaN(stakeFixa) || isNaN(oddEntrada) || stakeFixa <= 0 || oddEntrada <= 1.0) {
+                mensagemDiv.className = 'alert alert-danger d-block';
+                mensagemDiv.textContent = 'Por favor, insira valores válidos para Stake e Odd (Odd > 1.0).';
+                resultadosDiv.classList.add('hidden');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            // Inicializações
+            let stakeAtual = Math.round(stakeFixa * 100) / 100; // Stake ACUMULADA (inicia com a Stake base)
+            const stakeInicialOriginal = stakeAtual;
+            let dia = 0;
+            let historico = [];
+
+            mensagemDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+            resultadosDiv.classList.add('hidden');
+
+            if (simuladorChartInstance) { simuladorChartInstance.destroy(); }
+
+            // Garante que os displays iniciais estejam corretos
+            calcularLucroLay(); 
+
+            // Loop síncrono: aplica ciclo Win:Loss e juros compostos/stake fixa
+            while (stakeAtual > 0 && dia < maxDias) { 
+                dia++;
+                let resultado = 0;
+                let stakeAnteriorAcumulada = stakeAtual;
+                let status;
+                
+                // >>>>>> Stake Usada na Aposta (Cálculo):
+                // LAY (Juros Compostos): USA a stake atual acumulada (stakeAnteriorAcumulada)
+                // BACK (Stake Fixa): USA a stake inicial original (stakeInicialOriginal)
+                const stakeBaseParaCalculo = (modalidade === 'LAY') ? stakeAnteriorAcumulada : stakeInicialOriginal;
+
+                const isLossDay = cycleLength > 0 && (dia % cycleLength === 0) && lossesPerCycle > 0;
+
+                if (isLossDay) {
+                    // PERDA: Stop-Loss Composto (Mesma regra para LAY e BACK)
+                    const perdaPorRed = Math.round(stakeBaseParaCalculo * lossPercent * 100) / 100;
+                    resultado = -perdaPorRed;
+                    
+                    // A Stake ACUMULADA diminui pelo valor perdido
+                    stakeAtual = Math.round((stakeAtual + resultado) * 100) / 100;
+                    status = 'RED';
+
+                } else {
+                    // LUCRO: Varia conforme a modalidade
+                    let lucroPorGreen;
+
+                    if (modalidade === 'LAY') {
+                        // LAY: Stake / (Odd - 1)
+                        lucroPorGreen = Math.round((stakeBaseParaCalculo / (oddEntrada - 1)) * 100) / 100;
+                    } else { // BACK
+                        // BACK: Stake * (Odd - 1)
+                        lucroPorGreen = Math.round((stakeBaseParaCalculo * (oddEntrada - 1)) * 100) / 100;
+                    }
+                    
+                    resultado = lucroPorGreen;
+                    
+                    // A Stake ACUMULADA aumenta pelo valor do lucro
+                    stakeAtual = Math.round((stakeAtual + resultado) * 100) / 100;
+                    status = 'GREEN';
+                }
+
+                // Segurança: se stakeAtual <= 0, consideramos quebra da stake e paramos
+                if (stakeAtual <= 0) {
+                    historico.push({ 
+                        dia, 
+                        stakeInicialDia: stakeBaseParaCalculo, // Exibe a stake usada (Fixa ou Composta)
+                        resultado, 
+                        stakeFinal: 0.00, 
+                        status 
+                    });
+                    stakeAtual = 0;
+                    break;
+                }
+
+                // registra histórico
+                historico.push({ 
+                    dia, 
+                    stakeInicialDia: stakeBaseParaCalculo, // Exibe a stake usada (R$ 1000,00 no BACK, e acumulada no LAY)
+                    resultado, 
+                    stakeFinal: stakeAtual, // Exibe o acumulado total
+                    status 
+                });
+            }
+
+            // Finalização e exibição
+            loadingDiv.classList.add('hidden');
+            resultadosDiv.classList.remove('hidden');
+
+            const diasTotal = historico.length;
+            const stakeFinal = Math.max(0, stakeAtual);
+
+            // Crescimento acumulado exibido como variação percentual da STAKE inicial
+            const lucroPercentual = stakeInicialOriginal > 0 ? ((stakeFinal / stakeInicialOriginal) * 100) - 100 : 0;
+
+            document.getElementById('simuladorDiasNecessarios').textContent = diasTotal < maxDias ? diasTotal : `${maxDias}`;
+            document.getElementById('simuladorLucroTotal').textContent = `${lucroPercentual.toFixed(2)}%`;
+
+            renderizarSimuladorTabela(tabelaCorpo, historico);
+            renderizarSimuladorGrafico(historico);
+
+            if (stakeFinal <= 0) {
+                mensagemDiv.className = 'alert alert-danger d-block';
+                mensagemDiv.textContent = `FALHA: A stake foi reduzida a zero no Dia ${diasTotal}. Ajuste a gestão de risco.`;
+            } else if (diasTotal >= maxDias) {
+                 mensagemDiv.className = 'alert alert-warning d-block';
+                 mensagemDiv.textContent = `SIMULAÇÃO CONCLUÍDA: ${diasTotal} dias. A Stake final é ${R(stakeFinal)}.`;
+            } else {
+                mensagemDiv.className = 'alert alert-success d-block';
+                mensagemDiv.textContent = `Simulação concluída. A Stake final é ${R(stakeFinal)} após ${diasTotal} dias.`;
+            }
+        }
+
+
+        // 6. Funções de Renderização Simulador
+        function renderizarSimuladorTabela(tabelaCorpo, historico) {
+            tabelaCorpo.innerHTML = '';
+            historico.forEach(item => {
+                const row = tabelaCorpo.insertRow();
+                row.className = item.status === 'RED' ? 'table-danger' : item.status === 'GREEN' ? 'table-success' : 'table-dark';
+
+                row.insertCell().textContent = item.dia;
+                row.insertCell().textContent = R(item.stakeInicialDia); // Agora exibe o valor da stake usada (fixa no BACK)
+                row.insertCell().innerHTML = `<span class="fw-bold ${item.status === 'RED' ? 'text-loss' : 'text-win'}">${R(item.resultado)}</span>`;
+                row.insertCell().innerHTML = `<span class="fw-bold">${R(item.stakeFinal)}</span>`; // Continua exibindo o acumulado
+            });
+        }
+
+        // O gráfico plota a evolução da Stake.
+        function renderizarSimuladorGrafico(historico) {
+            const ctx = document.getElementById('curvaCrescimentoSimulador').getContext('2d');
+            
+            if (simuladorChartInstance) { simuladorChartInstance.destroy(); }
+
+            const chartLabels = historico.map(item => item.dia);
+            const chartData = historico.map(item => item.stakeFinal);
+            const pointColors = historico.map(item => item.status === 'RED' ? COLOR_LOSS : COLOR_SUCCESS);
+
+
+            simuladorChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Stake Base (R$)',
+                            data: chartData,
+                            borderColor: COLOR_SUCCESS,
+                            backgroundColor: 'rgba(255, 193, 7, 0.1)', // Cor amarela/warning
+                            pointBorderColor: COLOR_PRIMARY,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: pointColors
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    scales: {
+                        y: { title: { display: true, text: 'Valor da Stake (R$)', color: '#f8f9fa' }, ticks: { color: '#f8f9fa' } },
+                        x: { title: { display: true, text: 'Dia', color: '#f8f9fa' }, ticks: { color: '#f8f9fa' } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (context) => `Dia ${context[0].label}`,
+                                label: (context) => `Stake: ${R(context.parsed.y)}`
+                            }
+                        },
+                        datalabels: { display: false }
+                    }
+                }
+            });
+        }
+
+        // --- Inicialização no DOMContentLoaded ---
         document.addEventListener('DOMContentLoaded', () => {
-            renderOdds();
-            calculateDutching();
+            renderOdds(); // Inicializa inputs Dutching
+            
+            // Amarra o evento de clique ao botão do Simulador
+            document.getElementById('iniciarSimuladorButton').addEventListener('click', simular);
+            
+            // Inicialização dos inputs de Stake, Odd, Loss% e Modalidade
+            document.getElementById('simuladorModalidade').addEventListener('input', calcularLucroLay); 
+            document.getElementById('simuladorStakeFixa').addEventListener('input', calcularLucroLay);
+            document.getElementById('simuladorOddEntrada').addEventListener('input', calcularLucroLay);
+            document.getElementById('simuladorLossPercent').addEventListener('input', calcularLucroLay); 
+            calcularLucroLay(); // Executa o cálculo inicial ao carregar a página
+
+            showTool('dutching'); // Ativa a aba Dutching por padrão
+            calculateDutching(); // Executa o cálculo inicial da Dutching
         });
     </script>
 {% endblock content %}
