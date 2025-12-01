@@ -19,6 +19,12 @@ import json # Necessário para serializar dados do gráfico
 
 # --- VIEWS DE CONTEÚDO ---
 
+def jogos_flashscore(request):
+    """
+    Renderiza a página de jogos usando o widget Scores24 (Estilo FlashScore).
+    """
+    return render(request, 'analysis/jogos_flashscore.html')
+
 def public_tips_list(request):
     """
     Exibe a lista de tips gratuitas, separando-as por Jogos de Hoje, Próximos e Passados.

@@ -34,4 +34,6 @@ urlpatterns = [
 
     # Rota de Ação de Desativação (Admin)
     path('desativar-tip/<int:tip_id>/', views.deactivate_tip, name='deactivate_tip'),
+    # Rota para a nova página de Jogos & Odds
+    path("jogos-flashscore/", views.jogos_flashscore, name="jogos_flashscore"),
 ]
