@@ -1,9 +1,7 @@
-# tips_core/admin.py
-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-# Importa o novo modelo PromocaoBanner
-from .models import CustomUser, Tip, Noticia, Assinatura, PromocaoBanner 
+# Importa o novo modelo PromocaoBanner. Assinatura removida da importação para evitar confusão.
+from .models import CustomUser, Tip, Noticia, PromocaoBanner 
 
 # --- 1. Configuração Customizada para o Modelo de Usuário ---
 class CustomUserAdmin(UserAdmin):
@@ -44,17 +42,10 @@ class NoticiaAdmin(admin.ModelAdmin):
     search_fields = ('titulo', 'resumo')
 
 
-# --- 4. Registro do Modelo de Assinatura ---
-@admin.register(Assinatura)
-class AssinaturaAdmin(admin.ModelAdmin):
-    # Campos que serão exibidos na lista de Assinaturas
-    list_display = ('user', 'is_active', 'start_date')
-    # Filtros que aparecerão na barra lateral direita
-    list_filter = ('is_active', 'start_date')
-    # Campos que podem ser pesquisados
-    search_fields = ('user__username',)
+# >>>>> SEÇÃO 4 (Assinatura) REMOVIDA PARA CENTRALIZAR O CONTROLE NO CustomUser <<<<<
 
-# --- 5. NOVO: Registro do Modelo de Promoção/Banner ---
+
+# --- 4. NOVO: Registro do Modelo de Promoção/Banner ---
 @admin.register(PromocaoBanner)
 class PromocaoBannerAdmin(admin.ModelAdmin):
     # Campos que serão exibidos na lista de Banners

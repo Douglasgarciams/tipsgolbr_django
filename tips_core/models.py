@@ -1,14 +1,17 @@
+# tips_core/models.py
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings 
 from django.db.models.signals import post_save 
-from django.utils import timezone # ESSENCIAL: Adicionado para usar timezone.now
+from django.utils import timezone 
+from datetime import date # 🌟 ESSENCIAL: Para usar date.today()
 
 # --- 1. MODELO DE USUÁRIO CUSTOMIZADO ---
 class CustomUser(AbstractUser):
     """
     Modelo de Usuário estendido para o TipsGolBR.
-    Inclui campos de assinatura e related_name ajustados (CORREÇÃO DO E304).
+    A lógica de save() garante que is_premium_member seja controlado pela data.
     """
     is_premium_member = models.BooleanField(
         default=False,
@@ -21,6 +24,26 @@ class CustomUser(AbstractUser):
         verbose_name='Expiração Premium'
     )
     
+    # 🌟 IMPLEMENTAÇÃO FINAL: MÉTODO save() SOBRESCRITO
+    def save(self, *args, **kwargs):
+        """
+        Sobrescreve o save() para garantir que is_premium_member seja sempre
+        calculado pela data de expiração (Prevalência da data).
+        """
+        today = date.today()
+        
+        # 1. Calcula o status REAL baseado na data
+        # Se a data de expiração for HOJE ou FUTURA, o status real é True.
+        # Caso contrário (expirada ou nula), é False.
+        is_active_by_date = self.premium_expiration_date and self.premium_expiration_date >= today
+        
+        # 2. Força o campo is_premium_member a ser igual ao status calculado.
+        # Esta é a linha que anula qualquer edição manual do checkbox!
+        self.is_premium_member = is_active_by_date
+        
+        # 3. Chama o save() original para persistir as mudanças no banco.
+        super().save(*args, **kwargs)
+
     # --- CORREÇÃO DO ERRO E304 (Chaves Estrangeiras Colidindo) ---
     groups = models.ManyToManyField(
         'auth.Group',
@@ -77,14 +100,11 @@ ACCESS_LEVEL_CHOICES = [
 
 # --- 2. MODELO DE DICA (TIP) ---
 class Tip(models.Model):
-    """
-    Representa uma dica de aposta de futebol no TipsGolBR.
-    """
+    # ... (Manter o restante do modelo Tip intacto)
     match_title = models.CharField(max_length=200, verbose_name='Título do Jogo')
     league = models.CharField(max_length=100, verbose_name='Liga/Competição')
     match_date = models.DateTimeField(verbose_name='Data e Hora do Jogo')
 
-    # CAMPO DE MÉTODO
     method = models.CharField(
         max_length=10, 
         choices=METHOD_CHOICES, 
@@ -94,7 +114,6 @@ class Tip(models.Model):
     
     odd_value = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Odd (Cotação)')
     
-    # Resultado Final (ex: 2-1)
     resultado_final = models.CharField(
         max_length=100, 
         blank=True, 
@@ -102,14 +121,12 @@ class Tip(models.Model):
         verbose_name='Resultado Final'
     )
 
-    # Campo de controle de visibilidade (is_active)
     is_active = models.BooleanField(
         default=True, 
         verbose_name='Aposta Ativa/Visível',
         help_text='Desmarque para ocultar esta aposta do site (mas manter no histórico/gráfico).'
     )
     
-    # Valor da Aposta (Stake)
     valor_aposta = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -117,7 +134,6 @@ class Tip(models.Model):
         verbose_name='Valor da Aposta (Stake)'
     )
     
-    # Valor Ganho (Lucro)
     valor_ganho = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -125,7 +141,6 @@ class Tip(models.Model):
         verbose_name='Valor Ganho (Lucro)'
     )
     
-    # Valor Perda (Prejuízo)
     valor_perda = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -164,10 +179,10 @@ class Tip(models.Model):
         
 # --- 3. MODELO DE NOTÍCIA ---
 class Noticia(models.Model):
+    # ... (Manter o restante do modelo Noticia intacto)
     titulo = models.CharField(max_length=255, unique=True, verbose_name="Título")
     fonte_url = models.URLField(max_length=500, verbose_name="URL da Fonte")
     resumo = models.TextField(blank=True, null=True, verbose_name="Resumo")
-    # CORRIGIDO: Adicionado default=timezone.now
     data_publicacao = models.DateTimeField(verbose_name="Data de Publicação", default=timezone.now) 
     data_extracao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Extração")
 
@@ -189,6 +204,7 @@ class Noticia(models.Model):
         
 # --- 4. MODELO DE ASSINATURA ---
 class Assinatura(models.Model):
+    # ... (Manter o restante do modelo Assinatura intacto)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -205,12 +221,12 @@ class Assinatura(models.Model):
         return f"Assinatura de {self.user.username} - Ativa: {self.is_active}"
 
 
-# --- 5. MODELO DE PROMOÇÃO/BANNER PARA CARROSSEL (BOTAO RESTAURADO) ---
+# --- 5. MODELO DE PROMOÇÃO/BANNER PARA CARROSSEL ---
 class PromocaoBanner(models.Model):
+    # ... (Manter o restante do modelo PromocaoBanner intacto)
     titulo = models.CharField(max_length=200, verbose_name="Título do Banner", blank=True, null=True)
     descricao = models.TextField(blank=True, null=True, verbose_name="Descrição Curta")
     
-    # CAMPO RESTAURADO: ImageField para trazer de volta o botão de upload
     imagem = models.ImageField(
         upload_to='promo_banners/', 
         verbose_name="Imagem/Banner (Upload)"
@@ -230,19 +246,24 @@ class PromocaoBanner(models.Model):
         return self.titulo or f"Banner ID {self.id}" 
 
 # ----------------------------------------------------------------
-# --- LOGICA DE SINCRONIZAÇÃO VIA SIGNALS ---
+# --- LOGICA DE SINCRONIZAÇÃO VIA SIGNALS (REVISADA) ---
 # ----------------------------------------------------------------
 
 def sync_premium_status(sender, instance, **kwargs):
-    """Sincroniza o status 'is_active' da Assinatura com o campo 'is_premium_member' do Usuário."""
+    """
+    Sincroniza a Assinatura.is_active.
+    O CustomUser.save() (agora com a nova lógica) é chamado implicitamente
+    para corrigir o is_premium_member quando a Assinatura é salva/criada.
+    """
     
-    # Puxa o objeto do usuário
     user = instance.user
     
-    # Atualiza o status do usuário com o status da Assinatura
-    user.is_premium_member = instance.is_active
+    # 🌟 Apenas define o is_premium_member com base no is_active DA ASSINATURA
+    # O user.save() chamado a seguir irá RECALCULAR este campo com base na data.
+    user.is_premium_member = instance.is_active 
     
-    # Salva o objeto do usuário (update_fields garante que apenas este campo seja salvo)
+    # Ao chamar user.save() o método save() sobrescrito no CustomUser será executado,
+    # forçando o is_premium_member a ser o valor ditado pela data de expiração.
     user.save(update_fields=['is_premium_member']) 
 
 # Conecta a função ao evento post_save (após salvar) do modelo Assinatura
