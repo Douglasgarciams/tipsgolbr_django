@@ -568,141 +568,146 @@
         }
 
         // Função principal de simulação (Lógica LAY/BACK integrada)
-        function simular() {
+function simular() {
+    
+    const modalidade = document.getElementById('simuladorModalidade').value;
+    const maxDias = 365; // Limite de 365 dias.
+
+    const stakeFixa = parseFloat(document.getElementById('simuladorStakeFixa').value);
+    const oddEntrada = parseFloat(document.getElementById('simuladorOddEntrada').value);
+    const winRateStr = document.getElementById('simuladorWinRate').value;
+    const lossPercent = parseFloat(document.getElementById('simuladorLossPercent').value) / 100; 
+
+    const [winsPerCycle, lossesPerCycle] = winRateStr.split(':').map(Number);
+    const cycleLength = winsPerCycle + lossesPerCycle;
+
+    const resultadosDiv = document.getElementById('simuladorResultados');
+    const tabelaCorpo = document.getElementById('simuladorTabelaCorpo');
+    const mensagemDiv = document.getElementById('simuladorMensagem');
+    const loadingDiv = document.getElementById('simuladorLoading');
+
+    // Validação básica
+    if (isNaN(stakeFixa) || isNaN(oddEntrada) || stakeFixa <= 0 || oddEntrada <= 1.0) {
+        mensagemDiv.className = 'alert alert-danger d-block';
+        mensagemDiv.textContent = 'Por favor, insira valores válidos para Stake e Odd (Odd > 1.0).';
+        resultadosDiv.classList.add('hidden');
+        loadingDiv.classList.add('hidden');
+        return;
+    }
+
+    // Inicializações
+    let stakeAtual = Math.round(stakeFixa * 100) / 100; // Stake ACUMULADA (inicia com a Stake base)
+    const stakeInicialOriginal = stakeAtual;
+    let dia = 0;
+    let historico = [];
+
+    mensagemDiv.classList.add('hidden');
+    loadingDiv.classList.remove('hidden');
+    resultadosDiv.classList.add('hidden');
+
+    if (simuladorChartInstance) { simuladorChartInstance.destroy(); }
+
+    // Garante que os displays iniciais estejam corretos
+    calcularLucroLay(); 
+
+    // Loop síncrono: aplica ciclo Win:Loss e juros compostos/stake fixa
+    while (stakeAtual > 0 && dia < maxDias) { 
+        dia++;
+        let resultado = 0;
+        let stakeAnteriorAcumulada = stakeAtual;
+        let status;
+        
+        // Stake Usada na Aposta (Cálculo): 
+        // LAY (Juros Compostos): USA a stake atual acumulada 
+        // BACK (Stake Fixa): USA a stake inicial original
+        const stakeBaseParaCalculo = (modalidade === 'LAY') ? stakeAnteriorAcumulada : stakeInicialOriginal;
+
+        // 🌟 CORREÇÃO AQUI 🌟
+        // 1. Calcula a posição dentro do ciclo (0 a cycleLength - 1)
+        const cicloIndex = (dia - 1) % cycleLength; 
+
+        // 2. Determina se este índice está na faixa de Losses.
+        // As losses ocorrem nos últimos 'lossesPerCycle' dias do ciclo.
+        const isLossDay = lossesPerCycle > 0 && cicloIndex >= winsPerCycle;
+
+        if (isLossDay) {
+            // PERDA: Stop-Loss Composto (Mesma regra para LAY e BACK)
+            const perdaPorRed = Math.round(stakeBaseParaCalculo * lossPercent * 100) / 100;
+            resultado = -perdaPorRed;
             
-            const modalidade = document.getElementById('simuladorModalidade').value;
-            const maxDias = 365; // Limite de 365 dias.
+            // A Stake ACUMULADA diminui pelo valor perdido
+            stakeAtual = Math.round((stakeAtual + resultado) * 100) / 100;
+            status = 'RED';
 
-            const stakeFixa = parseFloat(document.getElementById('simuladorStakeFixa').value);
-            const oddEntrada = parseFloat(document.getElementById('simuladorOddEntrada').value);
-            const winRateStr = document.getElementById('simuladorWinRate').value;
-            const lossPercent = parseFloat(document.getElementById('simuladorLossPercent').value) / 100; 
+        } else {
+            // LUCRO: Varia conforme a modalidade
+            let lucroPorGreen;
 
-            const [winsPerCycle, lossesPerCycle] = winRateStr.split(':').map(Number);
-            const cycleLength = winsPerCycle + lossesPerCycle;
-
-            const resultadosDiv = document.getElementById('simuladorResultados');
-            const tabelaCorpo = document.getElementById('simuladorTabelaCorpo');
-            const mensagemDiv = document.getElementById('simuladorMensagem');
-            const loadingDiv = document.getElementById('simuladorLoading');
-
-            // Validação básica
-            if (isNaN(stakeFixa) || isNaN(oddEntrada) || stakeFixa <= 0 || oddEntrada <= 1.0) {
-                mensagemDiv.className = 'alert alert-danger d-block';
-                mensagemDiv.textContent = 'Por favor, insira valores válidos para Stake e Odd (Odd > 1.0).';
-                resultadosDiv.classList.add('hidden');
-                loadingDiv.classList.add('hidden');
-                return;
+            if (modalidade === 'LAY') {
+                // LAY: Stake / (Odd - 1)
+                lucroPorGreen = Math.round((stakeBaseParaCalculo / (oddEntrada - 1)) * 100) / 100;
+            } else { // BACK
+                // BACK: Stake * (Odd - 1)
+                lucroPorGreen = Math.round((stakeBaseParaCalculo * (oddEntrada - 1)) * 100) / 100;
             }
-
-            // Inicializações
-            let stakeAtual = Math.round(stakeFixa * 100) / 100; // Stake ACUMULADA (inicia com a Stake base)
-            const stakeInicialOriginal = stakeAtual;
-            let dia = 0;
-            let historico = [];
-
-            mensagemDiv.classList.add('hidden');
-            loadingDiv.classList.remove('hidden');
-            resultadosDiv.classList.add('hidden');
-
-            if (simuladorChartInstance) { simuladorChartInstance.destroy(); }
-
-            // Garante que os displays iniciais estejam corretos
-            calcularLucroLay(); 
-
-            // Loop síncrono: aplica ciclo Win:Loss e juros compostos/stake fixa
-            while (stakeAtual > 0 && dia < maxDias) { 
-                dia++;
-                let resultado = 0;
-                let stakeAnteriorAcumulada = stakeAtual;
-                let status;
-                
-                // Stake Usada na Aposta (Cálculo): 
-                // LAY (Juros Compostos): USA a stake atual acumulada 
-                // BACK (Stake Fixa): USA a stake inicial original
-                const stakeBaseParaCalculo = (modalidade === 'LAY') ? stakeAnteriorAcumulada : stakeInicialOriginal;
-
-                // Determina se este dia é um dia de Loss (Red)
-                const isLossDay = cycleLength > 0 && (dia % cycleLength === 0) && lossesPerCycle > 0;
-
-                if (isLossDay) {
-                    // PERDA: Stop-Loss Composto (Mesma regra para LAY e BACK)
-                    const perdaPorRed = Math.round(stakeBaseParaCalculo * lossPercent * 100) / 100;
-                    resultado = -perdaPorRed;
-                    
-                    // A Stake ACUMULADA diminui pelo valor perdido
-                    stakeAtual = Math.round((stakeAtual + resultado) * 100) / 100;
-                    status = 'RED';
-
-                } else {
-                    // LUCRO: Varia conforme a modalidade
-                    let lucroPorGreen;
-
-                    if (modalidade === 'LAY') {
-                        // LAY: Stake / (Odd - 1)
-                        lucroPorGreen = Math.round((stakeBaseParaCalculo / (oddEntrada - 1)) * 100) / 100;
-                    } else { // BACK
-                        // BACK: Stake * (Odd - 1)
-                        lucroPorGreen = Math.round((stakeBaseParaCalculo * (oddEntrada - 1)) * 100) / 100;
-                    }
-                    
-                    resultado = lucroPorGreen;
-                    
-                    // A Stake ACUMULADA aumenta pelo valor do lucro
-                    stakeAtual = Math.round((stakeAtual + resultado) * 100) / 100;
-                    status = 'GREEN';
-                }
-
-                // Segurança: se stakeAtual <= 0, consideramos quebra da stake e paramos
-                if (stakeAtual <= 0) {
-                    historico.push({ 
-                        dia, 
-                        stakeInicialDia: stakeBaseParaCalculo, // Exibe a stake usada (Fixa ou Composta)
-                        resultado, 
-                        stakeFinal: 0.00, 
-                        status 
-                    });
-                    stakeAtual = 0;
-                    break;
-                }
-
-                // registra histórico
-                historico.push({ 
-                    dia, 
-                    stakeInicialDia: stakeBaseParaCalculo, // Exibe a stake usada
-                    resultado, 
-                    stakeFinal: stakeAtual, // Exibe o acumulado total
-                    status 
-                });
-            }
-
-            // Finalização e exibição
-            loadingDiv.classList.add('hidden');
-            resultadosDiv.classList.remove('hidden');
-
-            const diasTotal = historico.length;
-            const stakeFinal = Math.max(0, stakeAtual);
-
-            // Crescimento acumulado exibido como variação percentual da STAKE inicial
-            const lucroPercentual = stakeInicialOriginal > 0 ? ((stakeFinal / stakeInicialOriginal) * 100) - 100 : 0;
-
-            document.getElementById('simuladorDiasNecessarios').textContent = diasTotal < maxDias ? diasTotal : `${maxDias}`;
-            document.getElementById('simuladorLucroTotal').textContent = `${lucroPercentual.toFixed(2)}%`;
-
-            renderizarSimuladorTabela(tabelaCorpo, historico);
-            renderizarSimuladorGrafico(historico);
-
-            if (stakeFinal <= 0) {
-                mensagemDiv.className = 'alert alert-danger d-block';
-                mensagemDiv.textContent = `FALHA: A stake foi reduzida a zero no Dia ${diasTotal}. Ajuste a gestão de risco.`;
-            } else if (diasTotal >= maxDias) {
-                 mensagemDiv.className = 'alert alert-warning d-block';
-                 mensagemDiv.textContent = `SIMULAÇÃO CONCLUÍDA: ${diasTotal} dias. A Stake final é ${R(stakeFinal)}.`;
-            } else {
-                mensagemDiv.className = 'alert alert-success d-block';
-                mensagemDiv.textContent = `Simulação concluída. A Stake final é ${R(stakeFinal)} após ${diasTotal} dias.`;
-            }
+            
+            resultado = lucroPorGreen;
+            
+            // A Stake ACUMULADA aumenta pelo valor do lucro
+            stakeAtual = Math.round((stakeAtual + resultado) * 100) / 100;
+            status = 'GREEN';
         }
+
+        // Segurança: se stakeAtual <= 0, consideramos quebra da stake e paramos
+        if (stakeAtual <= 0) {
+            historico.push({ 
+                dia, 
+                stakeInicialDia: stakeBaseParaCalculo, // Exibe a stake usada (Fixa ou Composta)
+                resultado, 
+                stakeFinal: 0.00, 
+                status 
+            });
+            stakeAtual = 0;
+            break;
+        }
+
+        // registra histórico
+        historico.push({ 
+            dia, 
+            stakeInicialDia: stakeBaseParaCalculo, // Exibe a stake usada
+            resultado, 
+            stakeFinal: stakeAtual, // Exibe o acumulado total
+            status 
+        });
+    }
+
+    // Finalização e exibição
+    loadingDiv.classList.add('hidden');
+    resultadosDiv.classList.remove('hidden');
+
+    const diasTotal = historico.length;
+    const stakeFinal = Math.max(0, stakeAtual);
+
+    // Crescimento acumulado exibido como variação percentual da STAKE inicial
+    const lucroPercentual = stakeInicialOriginal > 0 ? ((stakeFinal / stakeInicialOriginal) * 100) - 100 : 0;
+
+    document.getElementById('simuladorDiasNecessarios').textContent = diasTotal < maxDias ? diasTotal : `${maxDias}`;
+    document.getElementById('simuladorLucroTotal').textContent = `${lucroPercentual.toFixed(2)}%`;
+
+    renderizarSimuladorTabela(tabelaCorpo, historico);
+    renderizarSimuladorGrafico(historico);
+
+    if (stakeFinal <= 0) {
+        mensagemDiv.className = 'alert alert-danger d-block';
+        mensagemDiv.textContent = `FALHA: A stake foi reduzida a zero no Dia ${diasTotal}. Ajuste a gestão de risco.`;
+    } else if (diasTotal >= maxDias) {
+         mensagemDiv.className = 'alert alert-warning d-block';
+         mensagemDiv.textContent = `SIMULAÇÃO CONCLUÍDA: ${diasTotal} dias. A Stake final é ${R(stakeFinal)}.`;
+    } else {
+        mensagemDiv.className = 'alert alert-success d-block';
+        mensagemDiv.textContent = `Simulação concluída. A Stake final é ${R(stakeFinal)} após ${diasTotal} dias.`;
+    }
+}
 
 
         // 6. Funções de Renderização Simulador
