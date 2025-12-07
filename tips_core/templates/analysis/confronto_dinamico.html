@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="display-5 text-light mb-4">Análise de Confronto Dinâmica</h1>
+            <p class="lead text-secondary mb-5">
+                Insira o nome dos times e a informação que você deseja (ex: "Flamengo x Fluminense: desfalques e últimos resultados"). O Gemini fará a análise para você.
+            </p>
+        </div>
+    </div>
+    
+    <div class="tip-card p-4 shadow-lg"> 
+        <form id="analiseForm"> 
+            
+            {% csrf_token %} {# --------------------------------------------- #}
+            
+            {# CAMPOS DE TIME 1 E TIME 2 REMOVIDOS CONFORME SOLICITADO #}
+            
+            <div class="mb-4">
+                <label for="pedido" class="form-label text-warning fw-bold">Pedido/Análise Desejada:</label>
+                <input type="text" id="pedido" name="pedido" class="form-control" 
+                    placeholder="Ex: Desfalques e desempenho de Corinthians e Juventude" required>
+                <div class="form-text text-secondary">Sugestões: desfalques, escalação, últimos 5 jogos, análise tática.</div>
+            </div>
+
+            {# --------------------------------------------- #}
+            
+            <button type="submit" id="submitBtn" class="btn btn-warning btn-lg fw-bold w-100 mt-3">
+                <i class="fas fa-search me-2"></i> Gerar Análise com Gemini
+            </button>
+            
+        </form>
+    </div>
+    
+    
+    <hr class="my-5">
+    
+    <h2 class="text-light mb-4"><i class="fas fa-clipboard-list me-2 text-warning"></i> Resultado da Análise (Gemini)</h2>
+    
+    <div id="resultadoAnalise" class="p-4 bg-dark text-light rounded-3">
+        <p class="text-secondary">Preencha o formulário acima e clique em "Gerar Análise com Gemini" para ver o resumo aqui.</p>
+    </div>
+</div>
+
+<script>
+    // Função para converter o Markdown (retorno do Gemini) em HTML básico
+    function formatMarkdownToHTML(markdownText) {
+        let html = markdownText;
+        
+        // Substitui **negrito** por <strong>
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Substitui listas - por <ul>/<li>
+        // (Lógica simples, pode precisar de mais complexidade para listas aninhadas)
+        html = html.replace(/^- (.*)/gm, '<li>$1</li>');
+        
+        // Tenta envolver as listas em <ul> se elas existirem
+        if (html.includes('<li>')) {
+            // Usa replace para evitar quebras desnecessárias de <br> dentro de <li>
+            html = html.replace(/<br>/g, '');
+            html = '<ul>' + html.trim() + '</ul>';
+        }
+        
+        // Adiciona quebras de linha (para títulos/parágrafos)
+        html = html.replace(/\n/g, '<br>'); 
+        
+        return html;
+    }
+
+    document.getElementById('analiseForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Impede o envio tradicional (recarregamento de página)
+        
+        // 🛑 time1 e time2 foram removidos, agora só coletamos o pedido 🛑
+        const pedido = document.getElementById('pedido').value;
+        const resultadoDiv = document.getElementById('resultadoAnalise');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Estado de Carregamento
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Gerando Análise...';
+        resultadoDiv.innerHTML = '<p class="text-info">Aguarde, o Gemini está buscando e analisando as informações...</p>';
+
+        // Coleta o Token CSRF para segurança do Django
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(window.location.href, { // Envia POST para a mesma URL
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken // Token CSRF essencial
+            },
+            body: JSON.stringify({
+                // time1 e time2 removidos do payload
+                pedido: pedido
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Reabilita o botão
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-search me-2"></i> Gerar Análise com Gemini';
+            
+            if (data.status === 'success') {
+                // EXIBE A RESPOSTA FORMATADA AQUI
+                resultadoDiv.innerHTML = formatMarkdownToHTML(data.analysis_text);
+            } else {
+                // Captura erro de lógica ou falha de inicialização (se a view retornar um JSON de erro)
+                resultadoDiv.innerHTML = `<p class="text-danger fw-bold">Erro de Processamento: ${data.message}</p>`;
+            }
+        })
+        .catch(error => {
+            // Este catch pega erros de rede ou o erro de JSON/HTML (Unexpected token '<')
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-search me-2"></i> Gerar Análise com Gemini';
+            // A mensagem de erro sugere a causa provável
+            resultadoDiv.innerHTML = `<p class="text-danger fw-bold">Erro de Comunicação: O servidor retornou um erro inesperado (provável falha de segurança CSRF ou servidor inativo). Erro: ${error.message}</p>`;
+        });
+    });
+</script>
+{% endblock content %}

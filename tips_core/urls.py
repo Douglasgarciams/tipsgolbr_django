@@ -36,4 +36,7 @@ urlpatterns = [
     path('desativar-tip/<int:tip_id>/', views.deactivate_tip, name='deactivate_tip'),
     # Rota para a nova página de Jogos & Odds
     path("jogos-flashscore/", views.jogos_flashscore, name="jogos_flashscore"),
+    # 🌟 APLICAÇÃO TEMPORÁRIA DO csrf_exempt 🌟
+    # Isso desativa o token de segurança APENAS para esta view para fins de teste.
+    path('confronto-dinamico/', views.dynamic_matchup_view, name='dynamic_matchup'),
 ]
