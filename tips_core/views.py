@@ -19,18 +19,6 @@ from google import genai
 from google.genai.errors import APIError
 import json # Necessário para serializar dados do gráfico
 
-# ----------------------------------------------------------------------
-# 🌟 INICIALIZAÇÃO DA API DO GEMINI (COM TRATAMENTO DE ERRO) 🌟
-# ----------------------------------------------------------------------
-try:
-    # A biblioteca genai.Client() buscará a chave na variável de ambiente GEMINI_API_KEY
-    client = genai.Client()
-    print("Gemini Client inicializado com sucesso.")
-except Exception as e:
-    # Este bloco captura a falha se a chave não for encontrada ou for inválida
-    print(f"ERRO CRÍTICO: Falha ao inicializar o Gemini Client. Verifique a variável de ambiente GEMINI_API_KEY. Detalhe: {e}")
-    client = None # Define como None para que a view trate o erro 503
-
 # --- VIEWS DE CONTEÚDO ---
 
 def jogos_flashscore(request):
