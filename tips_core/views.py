@@ -15,8 +15,6 @@ from django.views.decorators.csrf import csrf_exempt
 import requests 
 import xml.etree.ElementTree as ET
 from django.utils import timezone
-from google import genai
-from google.genai.errors import APIError
 import json # Necessário para serializar dados do gráfico
 
 # --- VIEWS DE CONTEÚDO ---
