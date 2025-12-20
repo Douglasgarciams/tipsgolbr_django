@@ -19,7 +19,6 @@ ALLOWED_HOSTS = [
     'localhost',
     'tipsgolbr.com.br',
     'www.tipsgolbr.com.br',
-    'tipsgolbr-django.onrender.com',
 ]
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
