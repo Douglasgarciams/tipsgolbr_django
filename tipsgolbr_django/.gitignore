@@ -1,0 +1,21 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+venv/
+.venv/
+db.sqlite3
+/media
+/static
+
+# Arquivos temporários e de edição
+*~
+.DS_Store
+
+# Ignore local migration files (Render will run its own)
+tips_core/migrations/0*
+
+# Configurações de IDEs
+.idea/
+.vscode/

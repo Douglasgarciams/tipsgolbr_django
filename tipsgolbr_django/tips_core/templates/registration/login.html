@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}Entrar na Conta{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            {# Adicionado hero-section-card para o fundo escuro semi-transparente #}
+            <div class="card shadow-lg p-4 mt-5 hero-section-card border-warning"> 
+                <h2 class="card-title text-center mb-4 text-light">Acesso ao TipsGolBR</h2>
+
+                {% if form.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        Nome de usuário ou senha incorretos. Tente novamente.
+                    </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label text-light">{{ field.label }}</label>
+                            {# Renderiza o campo com a classe Bootstrap form-control #}
+                            {{ field|add_class:"form-control bg-dark text-light border-secondary" }}
+                            
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    
+                    <button type="submit" class="btn btn-primary w-100 mt-3 btn-lg">
+                        Entrar <i class="fas fa-sign-in-alt"></i>
+                    </button>
+                    
+                    {# Campo oculto para redirecionamento #}
+                    <input type="hidden" name="next" value="{{ next }}">
+                </form>
+
+                <hr class="my-4">
+                <p class="text-center small">
+                    <a href="{% url 'password_reset' %}" class="text-warning">Esqueceu sua senha?</a> | 
+                    Não tem uma conta? <a href="{% url 'register' %}" class="text-warning">Cadastre-se</a>
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

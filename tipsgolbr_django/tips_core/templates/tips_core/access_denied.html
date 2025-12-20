@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Acesso Negado{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center text-center">
+        <div class="col-md-8">
+            {# Ajustei o alert para usar o estilo de card escuro para consistência no design #}
+            <div class="card shadow-lg p-5 mt-5 hero-section-card border-warning" role="alert"> 
+                <h1 class="alert-heading display-4"><i class="fas fa-lock"></i> Acesso Negado!</h1>
+                <p class="lead mt-4">O conteúdo que você está tentando acessar é **exclusivo para Membros Premium**.</p>
+                <hr>
+                
+                {% if user.is_authenticated %}
+    <p class="mb-3">Você está logado como **{{ user.username }}**, mas seu status Premium está inativo.</p>
+    
+    {# CORREÇÃO: O botão deve ser um link (<a>) que aponta para a rota de ESCOLHA DE PLANOS #}
+    <a href="{% url 'choose_plan' %}" class="btn btn-warning btn-lg me-2">
+        Assine o Plano Premium Agora! 👑
+    </a>
+
+{% else %}
+    <p class="mb-3">Por favor, faça <a href="{% url 'login' %}" class="text-warning">login</a> ou <a href="{% url 'register' %}" class="text-warning">cadastre-se</a>.</p>
+{% endif %}
+
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg mt-3">Voltar para a página inicial</a>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
