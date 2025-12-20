@@ -17,6 +17,8 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
+    'tipsgolbr.com.br',
+    'www.tipsgolbr.com.br',
     'tipsgolbr-django.onrender.com',
 ]
 
