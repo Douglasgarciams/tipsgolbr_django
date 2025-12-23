@@ -5,7 +5,7 @@ from django.db import models
 from django.conf import settings 
 from django.db.models.signals import post_save 
 from django.utils import timezone 
-from datetime import date # 🌟 ESSENCIAL: Para usar date.today()
+from datetime import date 
 
 # --- 1. MODELO DE USUÁRIO CUSTOMIZADO ---
 class CustomUser(AbstractUser):
@@ -24,7 +24,7 @@ class CustomUser(AbstractUser):
         verbose_name='Expiração Premium'
     )
     
-    # 🌟 IMPLEMENTAÇÃO FINAL: MÉTODO save() SOBRESCRITO
+    # 🌟 IMPLEMENTAÇÃO CORRIGIDA: MÉTODO save() SOBRESCRITO
     def save(self, *args, **kwargs):
         """
         Sobrescreve o save() para garantir que is_premium_member seja sempre
@@ -32,16 +32,16 @@ class CustomUser(AbstractUser):
         """
         today = date.today()
         
-        # 1. Calcula o status REAL baseado na data
-        # Se a data de expiração for HOJE ou FUTURA, o status real é True.
-        # Caso contrário (expirada ou nula), é False.
-        is_active_by_date = self.premium_expiration_date and self.premium_expiration_date >= today
+        # Correção para evitar IntegrityError: 
+        # Verificamos se existe uma data antes de comparar.
+        if self.premium_expiration_date:
+            is_active_by_date = self.premium_expiration_date >= today
+        else:
+            is_active_by_date = False
         
-        # 2. Força o campo is_premium_member a ser igual ao status calculado.
-        # Esta é a linha que anula qualquer edição manual do checkbox!
+        # Garante que o campo booleano nunca seja NULL ao salvar no banco
         self.is_premium_member = is_active_by_date
         
-        # 3. Chama o save() original para persistir as mudanças no banco.
         super().save(*args, **kwargs)
 
     # --- CORREÇÃO DO ERRO E304 (Chaves Estrangeiras Colidindo) ---
@@ -59,7 +59,6 @@ class CustomUser(AbstractUser):
         help_text='Specific permissions for this user.',
         verbose_name='user permissions',
     )
-    # ----------------------------------------------------------------
 
     def __str__(self):
         return self.username
@@ -67,7 +66,6 @@ class CustomUser(AbstractUser):
 
 # --- DEFINIÇÕES DE ESCOLHAS ---
 
-# Choices para o Método de Aposta
 METHOD_CHOICES = [
     ('LAY0X1', 'LAY 0x1'),
     ('LAY0X2', 'LAY 0x2'),
@@ -100,7 +98,6 @@ ACCESS_LEVEL_CHOICES = [
 
 # --- 2. MODELO DE DICA (TIP) ---
 class Tip(models.Model):
-    # ... (Manter o restante do modelo Tip intacto)
     match_title = models.CharField(max_length=200, verbose_name='Título do Jogo')
     league = models.CharField(max_length=100, verbose_name='Liga/Competição')
     match_date = models.DateTimeField(verbose_name='Data e Hora do Jogo')
@@ -179,7 +176,6 @@ class Tip(models.Model):
         
 # --- 3. MODELO DE NOTÍCIA ---
 class Noticia(models.Model):
-    # ... (Manter o restante do modelo Noticia intacto)
     titulo = models.CharField(max_length=255, unique=True, verbose_name="Título")
     fonte_url = models.URLField(max_length=500, verbose_name="URL da Fonte")
     resumo = models.TextField(blank=True, null=True, verbose_name="Resumo")
@@ -204,7 +200,6 @@ class Noticia(models.Model):
         
 # --- 4. MODELO DE ASSINATURA ---
 class Assinatura(models.Model):
-    # ... (Manter o restante do modelo Assinatura intacto)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -223,7 +218,6 @@ class Assinatura(models.Model):
 
 # --- 5. MODELO DE PROMOÇÃO/BANNER PARA CARROSSEL ---
 class PromocaoBanner(models.Model):
-    # ... (Manter o restante do modelo PromocaoBanner intacto)
     titulo = models.CharField(max_length=200, verbose_name="Título do Banner", blank=True, null=True)
     descricao = models.TextField(blank=True, null=True, verbose_name="Descrição Curta")
     
@@ -251,20 +245,15 @@ class PromocaoBanner(models.Model):
 
 def sync_premium_status(sender, instance, **kwargs):
     """
-    Sincroniza a Assinatura.is_active.
-    O CustomUser.save() (agora com a nova lógica) é chamado implicitamente
-    para corrigir o is_premium_member quando a Assinatura é salva/criada.
+    Sincroniza a Assinatura com o CustomUser.
     """
-    
     user = instance.user
     
-    # 🌟 Apenas define o is_premium_member com base no is_active DA ASSINATURA
-    # O user.save() chamado a seguir irá RECALCULAR este campo com base na data.
-    user.is_premium_member = instance.is_active 
-    
-    # Ao chamar user.save() o método save() sobrescrito no CustomUser será executado,
-    # forçando o is_premium_member a ser o valor ditado pela data de expiração.
-    user.save(update_fields=['is_premium_member']) 
+    # Se a assinatura for marcada como inativa, podemos limpar a data (opcional)
+    if not instance.is_active:
+        user.premium_expiration_date = None
+        
+    # Salva o usuário, o que dispara o método save() do CustomUser e recalcula tudo
+    user.save() 
 
-# Conecta a função ao evento post_save (após salvar) do modelo Assinatura
 post_save.connect(sync_premium_status, sender=Assinatura)
