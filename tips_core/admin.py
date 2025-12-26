@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-# Importa o novo modelo PromocaoBanner. Assinatura removida da importação para evitar confusão.
-from .models import CustomUser, Tip, Noticia, PromocaoBanner 
+# Adicionado Team e Assinatura à importação para garantir que tudo funcione
+from .models import CustomUser, Tip, Noticia, PromocaoBanner, Team, Assinatura 
 
 # --- 1. Configuração Customizada para o Modelo de Usuário ---
 class CustomUserAdmin(UserAdmin):
@@ -12,23 +12,45 @@ class CustomUserAdmin(UserAdmin):
     # Campos que você quer que apareçam na lista de usuários
     list_display = UserAdmin.list_display + ('is_premium_member',)
     
-    # É necessário redefinir estes campos para o Admin funcionar corretamente com CustomUser
+    # CORREÇÃO: Alterado 'superuser' para 'is_superuser'
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'is_premium_member',)
 
 # Registra o seu modelo CustomUser com a configuração CustomUserAdmin
 admin.site.register(CustomUser, CustomUserAdmin)
 
+# --- NOVO: Registro do Modelo de Times (Cadastro Profissional) ---
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    list_display = ('name', 'logo')
+    search_fields = ('name',)
+
+
 # --- 2. Registro do Modelo de Dica (Tip) ---
 @admin.register(Tip)
 class TipAdmin(admin.ModelAdmin):
-    # Os campos 'method' e 'is_active' foram adicionados na lista de exibição
-    list_display = ('match_title', 'league', 'method', 'odd_value', 'access_level', 'status', 'is_active', 'match_date', 'link_aposta')
+    # ATUALIZADO: Placar inserido entre os nomes dos times para facilitar a leitura
+    list_display = (
+        'home_team', 
+        'score_home', 
+        'score_away', 
+        'away_team', 
+        'league', 
+        'method', 
+        'status', 
+        'is_active', 
+        'match_date'
+    )
+
+    search_fields = ('home_team__name', 'away_team__name', 'observation')
+    
     # Filtros que aparecerão na barra lateral direita
     list_filter = ('access_level', 'status', 'league', 'is_active', 'method')
-    # Campos que podem ser pesquisados
-    search_fields = ('match_title', 'method')
-    # Campos que podem ser editados diretamente na lista
-    list_editable = ('is_active', 'status', 'access_level')
+    
+    # Campos que podem ser pesquisados (agora busca pelo nome do time)
+    search_fields = ('home_team__name', 'away_team__name', 'method')
+    
+    # PERMITE EDITAR O PLACAR E O STATUS DIRETO NA LISTA (Muito útil para estatísticas)
+    list_editable = ('score_home', 'score_away', 'status', 'is_active')
 
 
 # --- 3. Registro do Modelo de Notícia ---
@@ -42,9 +64,6 @@ class NoticiaAdmin(admin.ModelAdmin):
     search_fields = ('titulo', 'resumo')
 
 
-# >>>>> SEÇÃO 4 (Assinatura) REMOVIDA PARA CENTRALIZAR O CONTROLE NO CustomUser <<<<<
-
-
 # --- 4. NOVO: Registro do Modelo de Promoção/Banner ---
 @admin.register(PromocaoBanner)
 class PromocaoBannerAdmin(admin.ModelAdmin):
@@ -56,3 +75,6 @@ class PromocaoBannerAdmin(admin.ModelAdmin):
     search_fields = ('titulo', 'descricao')
     # Campos que podem ser editados diretamente na lista
     list_editable = ('ativo', 'ordem')
+
+# --- 5. Registro do Modelo de Assinatura ---
+admin.site.register(Assinatura)

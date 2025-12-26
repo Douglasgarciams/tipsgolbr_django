@@ -30,9 +30,9 @@
                         </h5>
                         <hr class="my-2">
                         
-                        {# TÍTULO E LIGA #}
-                        <h6 class="fw-bold mb-1 text-light">
-                            {{ tip.match_title }} 
+                        {# TÍTULO COM DESTAQUE AMARELO (NOMES DOS TIMES) #}
+                        <h6 class="fw-bold mb-1 text-warning">
+                            {{ tip.home_team.name }} <span class="text-light">x</span> {{ tip.away_team.name }} 
                         </h6>
                         <span class="small text-light">{{ tip.league }}</span>
                         <hr class="my-1">
@@ -54,14 +54,24 @@
                             Status: <span class="fw-bold">{{ tip.get_status_display }}</span>
                         </p>
                         
-                        {# DETALHES DE RESULTADO E FINANCEIROS (COMO NO TIPS GRATUITAS) #}
-                        {% if tip.resultado_final %}
+                        {# PLACAR FINAL (ATUALIZADO PARA CAMPOS NUMÉRICOS) #}
+                        {% if tip.score_home is not None and tip.score_away is not None %}
                         <p class="small text-light mb-1">
                             <i class="fa fa-trophy me-2 text-warning"></i> 
-                            <strong>Resultado:</strong> {{ tip.resultado_final }}
+                            <strong>Placar Final:</strong> {{ tip.score_home }} - {{ tip.score_away }}
                         </p>
                         {% endif %}
 
+                        {# NOVO BLOCO DE OBSERVAÇÃO #}
+{% if tip.observation %}
+    <div class="mt-2 p-2 rounded" style="background-color: rgba(255, 255, 255, 0.05); border-left: 3px solid #ffc107;">
+        <p class="small text-light mb-0" style="font-style: italic;">
+            <i class="fas fa-comment-dots me-1 text-warning"></i> {{ tip.observation }}
+        </p>
+    </div>
+{% endif %}
+
+                        {# FINANCEIROS #}
                         <p class="small text-light mb-1">
                             <i class="fa fa-coins me-2 text-info"></i> 
                             <strong>Aposta:</strong> R$ {{ tip.valor_aposta|floatformat:2 }}

@@ -50,31 +50,28 @@ def public_tips_list(request):
         
     # 2. VISUALIZAÇÃO DE MEMBRO (Usuário logado)
     else:
-        # Filtra todas as tips gratuitas (consideramos todas se o usuário estiver logado)
-        all_free_tips = Tip.objects.filter(access_level='FREE').order_by('match_date')
+        # --- CORREÇÃO AQUI: Adicionado o filtro is_active=True ---
+        all_free_tips = Tip.objects.filter(
+            access_level='FREE', 
+            is_active=True
+        ).order_by('match_date')
         
         for tip in all_free_tips:
             tip_date = tip.match_date.date()
             
             # --- Regras de Classificação ---
             if tip_date == today:
-                # Jogo é hoje
                 tips_categorias['hoje'].append(tip)
             elif tip_date > today:
-                # Jogo no futuro
                 tips_categorias['proximos'].append(tip)
             else: # tip_date < today (Passado)
-                # Jogo no passado
                 if tip.status in ['WIN', 'LOSS', 'VOID']:
-                    # Aposta concluída (com resultado)
                     tips_categorias['concluidos'].append(tip)
                 else:
-                    # Aposta passada, mas o resultado ainda está como Pendente (PENDING)
                     tips_categorias['passados'].append(tip)
 
 
     context = {
-        # Passa o dicionário de categorias completo para o template
         'tips_categorias': tips_categorias, 
         'noticias': noticias_recentes,
         'promo_banners': promo_banners,

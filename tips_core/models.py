@@ -7,6 +7,28 @@ from django.db.models.signals import post_save
 from django.utils import timezone 
 from datetime import date 
 
+# --- NOVO MODELO: CADASTRO DE TIMES (PROFISSIONAL) ---
+class Team(models.Model):
+    """
+    Modelo para cadastrar times uma única vez. 
+    Permite centralizar nomes e escudos/logos.
+    """
+    name = models.CharField(max_length=100, unique=True, verbose_name="Nome do Time")
+    logo = models.ImageField(
+        upload_to='team_logos/', 
+        blank=True, 
+        null=True, 
+        verbose_name="Escudo/Logo"
+    )
+
+    class Meta:
+        verbose_name = "Time"
+        verbose_name_plural = "Times"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
 # --- 1. MODELO DE USUÁRIO CUSTOMIZADO ---
 class CustomUser(AbstractUser):
     """
@@ -98,7 +120,32 @@ ACCESS_LEVEL_CHOICES = [
 
 # --- 2. MODELO DE DICA (TIP) ---
 class Tip(models.Model):
-    match_title = models.CharField(max_length=200, verbose_name='Título do Jogo')
+    # Adicionando null=True e blank=True para destravar a migração
+    home_team = models.ForeignKey(
+        Team, 
+        on_delete=models.CASCADE, 
+        related_name='home_matches', 
+        verbose_name='Time Casa',
+        null=True,
+        blank=True
+    )
+    away_team = models.ForeignKey(
+        Team, 
+        on_delete=models.CASCADE, 
+        related_name='away_matches', 
+        verbose_name='Time Visitante',
+        null=True,
+        blank=True
+    )
+
+    # NOVO CAMPO DE OBSERVAÇÃO
+    observation = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="Observações/Análise do Resultado",
+        help_text="Espaço livre para comentar o que aconteceu no jogo."
+    )
+    
     league = models.CharField(max_length=100, verbose_name='Liga/Competição')
     match_date = models.DateTimeField(verbose_name='Data e Hora do Jogo')
 
@@ -111,11 +158,15 @@ class Tip(models.Model):
     
     odd_value = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Odd (Cotação)')
     
-    resultado_final = models.CharField(
-        max_length=100, 
+    score_home = models.IntegerField(
         blank=True, 
         null=True, 
-        verbose_name='Resultado Final'
+        verbose_name='Gols Casa'
+    )
+    score_away = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name='Gols Visitante'
     )
 
     is_active = models.BooleanField(
@@ -170,8 +221,11 @@ class Tip(models.Model):
         verbose_name = "Dica de Aposta"
         verbose_name_plural = "Dicas de Apostas"
 
+    # 🌟 CORREÇÃO DE SEGURANÇA PARA EVITAR AttributeError 'NoneType'
     def __str__(self):
-        return f"{self.match_title} - {self.get_method_display()}" 
+        if self.home_team and self.away_team:
+            return f"{self.home_team.name} x {self.away_team.name} - {self.get_method_display()}"
+        return f"Dica ID {self.id} (Sem times definidos)"
         
         
 # --- 3. MODELO DE NOTÍCIA ---
