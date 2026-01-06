@@ -27,19 +27,19 @@ def jogos_flashscore(request):
 
 def public_tips_list(request):
     """
-    Exibe a lista de tips gratuitas, separando-as por Jogos de Hoje, Próximos e Passados.
+    Exibe a lista de tips gratuitas, separando-as corretamente por data local.
     """
     noticias_recentes = None
     promo_banners = None
 
-    # Define a data de HOJE (apenas a data, desconsiderando a hora)
-    today = timezone.now().date()
+    # CORREÇÃO 1: Pega a data de HOJE baseada no fuso horário local (Brasil)
+    # Isso evita que o jogo mude de bloco antes da meia-noite real.
+    today = timezone.localtime(timezone.now()).date()
     
-    # Dicionários vazios para as categorias de tips
     tips_categorias = {
         'hoje': [],
         'proximos': [],
-        'passados': [], # Passados com status PENDING/SEM RESULTADO
+        'passados': [], # Passados com status PENDING
         'concluidos': [], # Passados com status WIN/LOSS/VOID
     }
 
@@ -50,26 +50,31 @@ def public_tips_list(request):
         
     # 2. VISUALIZAÇÃO DE MEMBRO (Usuário logado)
     else:
-        # --- CORREÇÃO AQUI: Adicionado o filtro is_active=True ---
+        # Filtra tips ativas e gratuitas
         all_free_tips = Tip.objects.filter(
             access_level='FREE', 
             is_active=True
         ).order_by('match_date')
         
         for tip in all_free_tips:
-            tip_date = tip.match_date.date()
+            # CORREÇÃO 2: Converte a data da Tip para o horário local antes de comparar
+            tip_date = timezone.localtime(tip.match_date).date()
             
-            # --- Regras de Classificação ---
+            # --- Regras de Classificação Corrigidas ---
             if tip_date == today:
+                # Se a data for EXATAMENTE igual a hoje (ex: 05/01)
                 tips_categorias['hoje'].append(tip)
+                
             elif tip_date > today:
+                # Se a data for no FUTURO (ex: 06/01 em diante)
                 tips_categorias['proximos'].append(tip)
-            else: # tip_date < today (Passado)
+                
+            else: 
+                # Se a data for no PASSADO (ex: 04/01 para trás)
                 if tip.status in ['WIN', 'LOSS', 'VOID']:
                     tips_categorias['concluidos'].append(tip)
                 else:
                     tips_categorias['passados'].append(tip)
-
 
     context = {
         'tips_categorias': tips_categorias, 
