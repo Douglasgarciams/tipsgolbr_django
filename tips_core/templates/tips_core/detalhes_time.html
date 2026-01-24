@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-4">
+    {# CABEÇALHO DO TIME #}
+    <div class="card bg-dark text-light p-4 mb-4 border-warning shadow-lg">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="fw-bold"><i class="fas fa-shield-alt text-warning me-2"></i> {{ time.name }}</h2>
+                <p class="text-secondary mb-0">Enciclopédia de Desempenho e Histórico</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <span class="badge bg-warning text-dark p-2">Total de Jogos: {{ stats.total }}</span>
+            </div>
+        </div>
+        
+        <hr class="border-secondary">
+
+        {# CARDS DE ESTATÍSTICAS #}
+        <div class="row text-center">
+            <div class="col-6 col-md-2 mb-3">
+                <div class="p-2 border border-secondary rounded">
+                    <h6 class="text-success fw-bold">Vitórias</h6>
+                    <h4>{{ stats.vitorias }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-2 mb-3">
+                <div class="p-2 border border-secondary rounded">
+                    <h6 class="text-danger fw-bold">Derrotas</h6>
+                    <h4>{{ stats.derrotas }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-2 mb-3">
+                <div class="p-2 border border-secondary rounded">
+                    <h6 class="text-info fw-bold">Empates</h6>
+                    <h4>{{ stats.empates }}</h4>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="p-2 border border-secondary rounded">
+                    <h6 class="text-warning fw-bold">Gols (Pró/Contra)</h6>
+                    <h4>{{ stats.gols_pro }} / {{ stats.gols_contra }}</h4>
+                </div>
+            </div>
+            <div class="col-12 col-md-3 mb-3">
+                <div class="p-2 border border-warning rounded bg-warning text-dark">
+                    <h6 class="fw-bold">Saldo de Gols</h6>
+                    <h4 class="fw-bold">{{ stats.saldo }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# TABELA DE JOGOS #}
+    <div class="card bg-dark text-light p-3 shadow">
+        <h4 class="mb-3 border-bottom pb-2">Histórico de Confrontos</h4>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead class="text-warning">
+                    <tr>
+                        <th>Data</th>
+                        <th>Competição</th>
+                        <th class="text-center">Mandante</th>
+                        <th class="text-center">Placar</th>
+                        <th class="text-center">Visitante</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for jogo in jogos %}
+                    <tr>
+                        <td class="small">{{ jogo.match_date|date:"d/m/Y" }}</td>
+                        <td><span class="badge bg-secondary">{{ jogo.league }}</span></td>
+                        <td class="text-center {% if jogo.home_team == time %}fw-bold text-warning{% endif %}">
+                            {{ jogo.home_team.name }}
+                        </td>
+                        <td class="text-center fw-bold bg-secondary rounded">
+                            {{ jogo.score_home }} - {{ jogo.score_away }}
+                        </td>
+                        <td class="text-center {% if jogo.away_team == time %}fw-bold text-warning{% endif %}">
+                            {{ jogo.away_team.name }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">Nenhum jogo registrado para este time ainda.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

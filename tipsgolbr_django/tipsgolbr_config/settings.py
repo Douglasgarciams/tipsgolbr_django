@@ -10,8 +10,8 @@ SECRET_KEY = os.environ.get(
     'django-insecure-wxis=7n6roizne*%)94#@s7qqz@^8l5180ww44p-&9397z@!k)'
 )
 
-# DEBUG: False em produção
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+# --- ALTERAÇÃO AQUI: FORÇADO PARA TRUE PARA TESTE LOCAL ---
+DEBUG = True 
 
 # ALLOWED_HOSTS
 ALLOWED_HOSTS = [
@@ -77,6 +77,7 @@ WSGI_APPLICATION = 'tipsgolbr_config.wsgi.application'
 
 # DATABASE
 # Desenvolvimento local: SQLite
+# --- ESTA CONFIGURAÇÃO ABAIXO AGORA É A ÚNICA ATIVA ---
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -85,12 +86,13 @@ DATABASES = {
 }
 
 # Produção: PostgreSQL do Render
-if os.environ.get('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
+# --- BLOCO COMENTADO PARA NÃO CONECTAR NO BANCO EXTERNO VAZIO ---
+# if os.environ.get('DATABASE_URL'):
+     DATABASES['default'] = dj_database_url.config(
+         default=os.environ.get('DATABASE_URL'),
+         conn_max_age=600,
+         conn_health_checks=True,
+     )
 
 # PASSWORDS
 AUTH_PASSWORD_VALIDATORS = [
@@ -127,26 +129,21 @@ LOGOUT_REDIRECT_URL = 'home'
 
 # --- CONFIGURAÇÕES DO PAGSEGURO/PAGBANK ---
 
-# E-MAIL DO VENDEDOR (SUA CONTA PAGSEGURO) - É CRUCIAL!
 PAGSEGURO_SELLER_EMAIL = os.environ.get(
     'PAGSEGURO_SELLER_EMAIL',
-    'garciainteligencia@hotmail.com' # <--- SUBSTITUA ISTO PELO SEU EMAIL REAL
+    'garciainteligencia@hotmail.com'
 )
 
-# Token/Chave de integração
 PAGSEGURO_TOKEN = os.environ.get(
     'PAGSEGURO_TOKEN', 
     'df0fef46-42d9-473e-b854-ebfd4c588d0deb4b703b405888ace9fe3477b4068d17191a-e8c4-419a-9e2f-34f72bec6803'
 )
 
-# Mapeamento dos planos para os detalhes de checkout (valor e código de produto)
 PAGSEGURO_PLAN_URLS = {
     1: "https://pag.ae/81fzeG5jm",
     3: "https://pag.ae/81femFKQr",
     6: "https://pag.ae/81fej-om6",
 }
-
-# === CONFIGURAÇÕES ADICIONAIS OBRIGATÓRIAS DO PAGSEGURO ===
 
 PAGSEGURO_NOTIFICATION_URL = os.environ.get(
     'PAGSEGURO_NOTIFICATION_URL',

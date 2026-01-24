@@ -36,4 +36,14 @@ urlpatterns = [
     path('desativar-tip/<int:tip_id>/', views.deactivate_tip, name='deactivate_tip'),
     # Rota para a nova página de Jogos & Odds
     path("jogos-flashscore/", views.jogos_flashscore, name="jogos_flashscore"),    
+
+# ----------------------------------------------------------------
+    # --- NOVAS ROTAS: ABA DE DADOS DOS TIMES (ENCICLOPÉDIA) ---
+    # ----------------------------------------------------------------
+    
+    # Página com a lista de todos os times para selecionar
+    path('banco-de-dados/times/', views.lista_times, name='lista_times'),
+    
+    # Página detalhada de um time específico (Estatísticas e Confrontos)
+    path('banco-de-dados/time/<int:team_id>/', views.detalhes_time, name='detalhes_time'),
 ]

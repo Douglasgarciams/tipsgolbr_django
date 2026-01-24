@@ -6,9 +6,9 @@ from datetime import datetime, timedelta, date # Adicionado 'date'
 import pytz 
 from django.contrib.auth import get_user_model, update_session_auth_hash 
 # IMPORTAÇÕES ESSENCIAIS PARA O CÁLCULO DE ANÁLISE
-from django.db.models import Sum, Count, F, Case, When, DecimalField, Max, functions # Adicionado Max e functions
+from django.db.models import Sum, Count, F, Case, When, DecimalField, Max, functions, Q # Adicionado Max e functions
 from django.conf import settings 
-from .models import Tip, Noticia, Assinatura, METHOD_CHOICES, PromocaoBanner
+from .models import Tip, Noticia, Assinatura, METHOD_CHOICES, PromocaoBanner, Team
 from .forms import CustomUserCreationForm
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -16,6 +16,7 @@ import requests
 import xml.etree.ElementTree as ET
 from django.utils import timezone
 import json # Necessário para serializar dados do gráfico
+from .models import Team
 
 # --- VIEWS DE CONTEÚDO ---
 
@@ -349,3 +350,71 @@ def confirm_payment(request, username):
     except Exception as e:
         messages.error(request, f"Erro ao processar ativação: {e}")
         return redirect('home')
+    
+    # ----------------------------------------------------------------
+# --- NOVAS VIEWS: ABA DE DADOS DOS TIMES (ENCICLOPÉDIA) ---
+# ----------------------------------------------------------------
+
+@login_required
+def lista_times(request):
+    # 1. Captura o que o usuário digitou no campo de busca (name="search")
+    search_query = request.GET.get('search')
+    
+    # 2. Se houver algo digitado, filtra. Se não, pega tudo.
+    if search_query:
+        times = Team.objects.filter(name__icontains=search_query).order_by('name')
+        print(f"--- DEBUG: BUSCA POR '{search_query}' RETORNOU {times.count()} TIMES ---")
+    else:
+        times = Team.objects.all().order_by('name')
+        print(f"--- DEBUG: O DJANGO ESTÁ LENDO {times.count()} TIMES (LISTA COMPLETA) ---")
+    
+    return render(request, 'tips_core/lista_times.html', {'times': times})
+
+@login_required
+def detalhes_time(request, team_id):
+    """Calcula estatísticas de um time capturando todos os tipos de resultados."""
+    time = get_object_or_404(Team, pk=team_id)
+    
+    # BUSCA AMPLIADA: Pega todos os jogos onde o time participou (Mandante ou Visitante)
+    # Removemos a exigência estrita de score_home__isnull para capturar mais dados
+    jogos = Tip.objects.filter(
+        Q(home_team=time) | Q(away_team=time)
+    ).order_by('-match_date')
+
+    vitorias = 0
+    derrotas = 0
+    empates = 0
+    gols_pro = 0
+    gols_contra = 0
+
+    for jogo in jogos:
+        # Só processamos o cálculo se houver números nos campos de gols
+        if jogo.score_home is not None and jogo.score_away is not None:
+            if jogo.home_team == time:
+                gols_pro += jogo.score_home
+                gols_contra += jogo.score_away
+                if jogo.score_home > jogo.score_away: vitorias += 1
+                elif jogo.score_home < jogo.score_away: derrotas += 1
+                else: empates += 1
+            else: # Time era visitante
+                gols_pro += jogo.score_away
+                gols_contra += jogo.score_home
+                if jogo.score_away > jogo.score_home: vitorias += 1
+                elif jogo.score_away < jogo.score_home: derrotas += 1
+                else: empates += 1
+
+    context = {
+        'time': time,
+        'jogos': jogos,
+        'title': f'Estatísticas: {time.name}',
+        'stats': {
+            'vitorias': vitorias,
+            'derrotas': derrotas,
+            'empates': empates,
+            'gols_pro': gols_pro,
+            'gols_contra': gols_contra,
+            'saldo': gols_pro - gols_contra,
+            'total': jogos.count()
+        }
+    }
+    return render(request, 'tips_core/detalhes_time.html', context)

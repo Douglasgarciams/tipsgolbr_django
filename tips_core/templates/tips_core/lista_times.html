@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 pt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <h2 class="text-light fw-bold mb-0">Escolha um Time</h2>
+        
+        <form method="GET" action="" class="d-flex">
+            <input type="text" name="search" class="form-control bg-dark text-light border-secondary me-2" 
+                   placeholder="Buscar time..." value="{{ request.GET.search|default:'' }}">
+            <button class="btn btn-warning" type="submit">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+            {% if request.GET.search %}
+                <a href="?search=" class="btn btn-outline-secondary ms-2">Limpar</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="row">
+        {% for time in times %}
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'detalhes_time' time.id %}" class="text-decoration-none">
+                <div class="card bg-dark text-warning border-secondary text-center p-3 h-100 shadow-sm hover-effect">
+                    <h5 class="mb-0">{{ time.name }}</h5>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center mt-5">
+            <p class="text-muted">Nenhum time encontrado com esse nome.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .hover-effect:hover {
+        border-color: #ffc107 !important;
+        transform: translateY(-5px);
+        transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2) !important;
+    }
+    /* Estilo para o campo de busca não ficar azul ao clicar */
+    .form-control:focus {
+        background-color: #212529 !important;
+        color: white !important;
+        border-color: #ffc107 !important;
+        box-shadow: none !important;
+    }
+</style>
+{% endblock %}

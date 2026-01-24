@@ -82,7 +82,8 @@ WSGI_APPLICATION = 'tipsgolbr_config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        # Isso força o Django a ler SEMPRE o arquivo que você viu na pasta raiz
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
