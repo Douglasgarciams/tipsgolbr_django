@@ -36,13 +36,11 @@
                     </tr>
                 </thead>
                 <tbody>
-
                     {% for item in summary %}
                     <tr data-method="{{ item.method_name }}"
                         data-profit="{{ item.lucro_liquido_total|floatformat:2 }}"
                         data-wins="{{ item.total_wins }}"
-                        data-losses="{{ item.total_losses }}"
-                        data-date="{{ item.match_date|date:'Y-m' }}">
+                        data-losses="{{ item.total_losses }}">
                         
                         <td class="text-secondary small">
                             {{ item.match_date|date:"d/m/Y" }}
@@ -69,7 +67,6 @@
                         <td>{{ item.total_wins }} / {{ item.total_losses }}</td>
                     </tr>
                     {% endfor %}
-
                 </tbody>
             </table>
         </div>
@@ -77,7 +74,6 @@
         <h2 class="text-light fw-bold mt-5 mb-3 border-bottom pb-2">Gráficos Estatísticos</h2>
 
         <div class="row">
-
             <div class="col-md-6 mb-4">
                 <div class="mt-4 p-3 bg-dark rounded shadow-lg h-100">
                     <h5 class="text-light mb-3 border-bottom pb-2">Lucro Líquido por Método (R$)</h5>
@@ -95,16 +91,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="col-12 mb-4">
-                <div class="mt-4 p-3 bg-dark rounded shadow-lg">
-                    <h5 class="text-light mb-3 border-bottom pb-2">Evolução Mensal (Lucro Líquido)</h5>
-                    <div style="height: 350px;">
-                        <canvas id="monthlyChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
     {% else %}
@@ -127,47 +113,42 @@
 Chart.register(ChartDataLabels);
 
 document.addEventListener("DOMContentLoaded", () => {
-
     const rows = document.querySelectorAll("tbody tr");
 
-    let labels = [];
-    let profitData = [];
+    let labelsMetodos = [];
+    let profitDataMetodos = [];
     let winCount = 0;
     let lossCount = 0;
     let profitColors = [];
 
-    // ---- COLETA DADOS ----
+    // ---- COLETA E PROCESSAMENTO DE DADOS ----
     rows.forEach(row => {
         const method = row.dataset.method;
-        const profit = parseFloat(row.dataset.profit.replace(',', '.')); // Garante formato numérico
+        const profit = parseFloat(row.dataset.profit.replace(',', '.'));
         const wins = parseInt(row.dataset.wins);
         const losses = parseInt(row.dataset.losses);
 
-        labels.push(method);
-        profitData.push(profit);
+        // Dados para Gráfico por Método
+        labelsMetodos.push(method);
+        profitDataMetodos.push(profit);
+        profitColors.push(profit >= 0 ? "rgba(25,135,84,0.8)" : "rgba(220,53,69,0.8)");
 
+        // Dados para Win/Loss Global
         winCount += wins;
         lossCount += losses;
-
-        profitColors.push(
-            profit > 0 ? "rgba(25,135,84,0.8)" :
-            profit < 0 ? "rgba(220,53,69,0.8)" :
-            "rgba(108,117,125,0.8)"
-        );
     });
 
     // ------------------------------------------------------------------
-    // GRÁFICO 1 – LUCRO POR MÉTODO
+    // GRÁFICO 1 – LUCRO POR MÉTODO (BARRAS)
     // ------------------------------------------------------------------
     new Chart(document.getElementById("profitChart"), {
         type: "bar",
         data: {
-            labels,
+            labels: labelsMetodos,
             datasets: [{
                 label: "Lucro Líquido",
-                data: profitData,
+                data: profitDataMetodos,
                 backgroundColor: profitColors,
-                borderColor: profitColors.map(c => c.replace("0.8","1")),
                 borderWidth: 1
             }]
         },
@@ -175,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: "#ffffff" } },
+                legend: { display: false },
                 datalabels: {
                     color: "#ffffff",
                     anchor: "end",
@@ -191,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ------------------------------------------------------------------
-    // GRÁFICO 2 – WIN/LOSS
+    // GRÁFICO 2 – WIN/LOSS (ROSCA)
     // ------------------------------------------------------------------
     new Chart(document.getElementById("winLossChart"), {
         type: "doughnut",
@@ -199,10 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
             labels: ["Wins", "Losses"],
             datasets: [{
                 data: [winCount, lossCount],
-                backgroundColor: [
-                    "rgba(25,135,84,0.9)",
-                    "rgba(220,53,69,0.9)"
-                ]
+                backgroundColor: ["rgba(25,135,84,0.9)", "rgba(220,53,69,0.9)"]
             }]
         },
         options: {
@@ -223,73 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     });
-
-    // ------------------------------------------------------------------
-    // GRÁFICO 3 – EVOLUÇÃO MENSAL (LÓGICA CORRIGIDA)
-    // ------------------------------------------------------------------
-    let monthly = {};
-
-    rows.forEach(row => {
-        const month = row.dataset.date;
-        const profit = parseFloat(row.dataset.profit.replace(',', '.'));
-
-        if (!monthly[month]) monthly[month] = 0;
-        monthly[month] += profit;
-    });
-
-    // Ordenação cronológica para garantir o traçado correto da linha
-    const monthlyLabels = Object.keys(monthly).sort();
-    const monthlyValues = monthlyLabels.map(m => monthly[m]);
-    
-    // Cores dos pontos baseadas no lucro do mês
-    const monthlyColors = monthlyValues.map(v =>
-        v >= 0 ? "rgba(25,135,84,1)" : "rgba(220,53,69,1)"
-    );
-
-    new Chart(document.getElementById("monthlyChart"), {
-        type: "line",
-        data: {
-            labels: monthlyLabels,
-            datasets: [{
-                label: "Lucro Mensal (R$)",
-                data: monthlyValues,
-                borderColor: "rgba(255,193,7,1)", // Linha amarela do TipsGolBR
-                backgroundColor: "rgba(255,193,7,0.1)",
-                pointBackgroundColor: monthlyColors,
-                pointBorderColor: "#fff",
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                borderWidth: 3,
-                fill: true,
-                tension: 0.3 // Suaviza a linha para mostrar evolução
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { labels: { color: "#ffffff" } },
-                datalabels: {
-                    color: "#ffffff",
-                    align: "top",
-                    offset: 8,
-                    formatter: v => "R$ " + v.toFixed(2)
-                }
-            },
-            scales: {
-                x: { 
-                    ticks: { color: "#ffffff" },
-                    grid: { color: "rgba(255,255,255,0.1)" }
-                },
-                y: { 
-                    beginAtZero: false,
-                    ticks: { color: "#ffffff" },
-                    grid: { color: "rgba(255,255,255,0.1)" }
-                }
-            }
-        }
-    });
-
 });
 </script>
 {% endblock extra_js %}
