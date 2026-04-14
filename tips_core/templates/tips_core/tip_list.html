@@ -5,14 +5,12 @@
 
 {% block content %}
     
-    {# NOVO CONTAINER CENTRALIZADO PARA O HERO SECTION (BANNER/CARROSSEL/BOTÕES) #}
+    {# CONTAINER CENTRALIZADO PARA O HERO SECTION (BANNER/CARROSSEL/BOTÕES) #}
     <div class="container"> 
         
-        {# HERO SECTION: CONTEÚDO PRINCIPAL DE DESTAQUE #}
         <div class="row mb-5 pt-0">
             <div class="col-12 text-center p-0"> 
                 
-                {# CONDICIONAL: SE O USUÁRIO NÃO ESTÁ LOGADO, MOSTRAR CARROSSEL #}
                 {% if not user.is_authenticated %}
                     {% if promo_banners %}
                         <div class="row justify-content-center pt-2 pb-2">
@@ -22,12 +20,9 @@
                                         {% for banner in promo_banners %}
                                             <div class="carousel-item h-100 {% if forloop.first %}active{% endif %}">
                                                 <a href="{{ banner.link_url }}" target="_blank" class="d-block h-100">
-                                                    {# CORREÇÃO AQUI: USA O CAMPO ORIGINAL DO UPLOAD #}
                                                     <img src="{{ banner.imagem.url }}" alt="{{ banner.titulo }}">
                                                     <div class="carousel-caption d-none d-md-block text-start p-2 rounded">
-                                                        {% if banner.titulo %}
-                                                            <h5>{{ banner.titulo }}</h5>
-                                                        {% endif %}
+                                                        {% if banner.titulo %}<h5>{{ banner.titulo }}</h5>{% endif %}
                                                         {% if banner.descricao %}<p>{{ banner.descricao }}</p>{% endif %}
                                                     </div>
                                                 </a>
@@ -37,30 +32,22 @@
                                     {% if promo_banners|length > 1 %}
                                         <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev">
                                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                            <span class="visually-hidden">Anterior</span>
                                         </button>
                                         <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next">
                                             <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                            <span class="visually-hidden">Próximo</span>
                                         </button>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
-                    {% else %}
-                        {# Fallback se não houver banners #}
-                        <h1 class="display-5 fw-bold text-light mt-4">Nenhuma promoção ativa no momento.</h1>
-                        <p class="lead text-light mt-3">Cadastre-se para ver as melhores tips!</p>
                     {% endif %}
                 {% else %}
-                    {# Usuário logado #}
                     <h1 class="display-5 fw-bold text-light mt-4">Bem-vindo(a) de volta!</h1>
                     <p class="lead text-light mt-3">Acompanhe suas Tips e Análises Exclusivas!</p>
                 {% endif %}
                 
-                {# Botões de Cadastro/Ver Premium #}
                 {% if not user.is_authenticated %}
-                    <a href="{% url 'register' %}" class="btn btn-warning btn-lg mt-3 fw-bold text-dark me-3">
+                    <a href="{% url 'register' %}" class="btn btn-warning btn-lg mt-3 fw-bold text-dark">
                         Cadastre-se Grátis Agora! <i class="fa fa-arrow-right"></i>
                     </a>
                 {% else %}
@@ -70,21 +57,118 @@
                 {% endif %}
             </div>
         </div>
-        {# FIM HERO SECTION #}
-        
+
+        {# --- IMPLEMENTAÇÃO 1: ALERTA DE RESPONSABILIDADE +18 --- #}
+        {% if not user.is_authenticated %}
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="p-3 rounded shadow-sm border border-danger bg-dark text-center">
+                    <span class="badge bg-danger me-2">18+</span>
+                    <strong class="text-light">RESPONSABILIDADE:</strong> 
+                    <span class="text-secondary ms-1">O mercado de apostas envolve riscos. Jogue com consciência e apenas por entretenimento.</span>
+                </div>
+            </div>
+        </div>
+
+        {# --- IMPLEMENTAÇÃO 2: GUIA EDUCATIVO (CARDS) --- #}
+        <h2 class="text-light fw-bold mb-4 border-bottom pb-2">Aprenda a Apostar com Valor</h2>
+        <div class="row mb-5">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border-secondary">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning"><i class="fas fa-shield-alt me-2"></i> Gestão de Risco</h5>
+                        <p class="card-text text-secondary small">Nunca aposte o que você não pode perder. A gestão de banca é o que diferencia o apostador profissional do amador.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border-secondary">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning"><i class="fas fa-balance-scale me-2"></i> Disciplina</h5>
+                        <p class="card-text text-secondary small">O Red faz parte do jogo. Controle suas emoções e não tente "recuperar" prejuízos no mesmo dia de forma impulsiva.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border-secondary">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning"><i class="fas fa-graduation-cap me-2"></i> Estudo e Análise</h5>
+                        <p class="card-text text-secondary small">Informação é poder. No TipsGolBR, transformamos dados estatísticos em oportunidades de valor para você. Venha fazer parte do nosso grupo PREMIUM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# --- IMPLEMENTAÇÃO 3: CENTRAL DE VÍDEOS (4 VÍDEOS) --- #}
+<h2 class="text-light fw-bold mb-4 border-bottom pb-2">Central de Vídeos Educativos</h2>
+<div class="row mb-5">
+    
+    {# VÍDEO 1 #}
+    <div class="col-md-6 mb-4">
+        <div class="ratio ratio-16x9 shadow-lg rounded overflow-hidden border border-secondary h-100">
+            <iframe 
+                src="https://www.youtube.com/embed/b_rQnxPzl8c" 
+                title="Estratégias de Aposta" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    {# VÍDEO 2 #}
+    <div class="col-md-6 mb-4">
+        <div class="ratio ratio-16x9 shadow-lg rounded overflow-hidden border border-secondary h-100">
+            <iframe 
+                src="https://www.youtube.com/embed/0Z_wP8tHlOA" 
+                title="Gestão de Banca" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    {# VÍDEO 3 #}
+    <div class="col-md-6 mb-4">
+        <div class="ratio ratio-16x9 shadow-lg rounded overflow-hidden border border-secondary h-100">
+            <iframe 
+                src="https://www.youtube.com/embed/VfiUncvzX-g?si=RjGZfroDilftQ1pj" 
+                title="Análise de Mercado" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    {# VÍDEO 4 #}
+    <div class="col-md-6 mb-4">
+        <div class="ratio ratio-16x9 shadow-lg rounded overflow-hidden border border-secondary h-100">
+            <iframe 
+                src="https://www.youtube.com/embed/Uy-tByfSn24?si=TeHz83u2qb9vAv2q" 
+                title="Psicologia no Trade" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+</div>
+        {% endif %}
+
         <hr class="my-5"> 
     </div>
-    {# FIM DO NOVO CONTAINER CENTRALIZADO #}
 
 
-    {# --- SEÇÃO DE TIPS/JOGOS - FORA DO CONTAINER PARA OCUPAR TODA A LARGURA --- #}
-    
+    {# --- SEÇÃO DE TIPS PARA LOGADOS --- #}
     {% if user.is_authenticated %}
-        
-        {# ----------------------------------------------------------- #}
-        {# --- SEÇÃO 1: JOGOS DE HOJE --- #}
-        {# ----------------------------------------------------------- #}
-        <div class="container"> {# Adicionado container aqui para alinhar as tips #}
+        <div class="container">
             {% if tips_categorias.hoje %}
                 <h2 class="mb-4 text-light"><i class="fas fa-calendar-check me-2 text-warning"></i> Jogos de Hoje</h2>
                 <div class="row">
@@ -94,12 +178,7 @@
                 </div>
                 <hr class="my-5">
             {% endif %}
-        </div>
-        
-        {# ----------------------------------------------------------- #}
-        {# --- SEÇÃO 2: PRÓXIMOS JOGOS (FUTURO) --- #}
-        {# ----------------------------------------------------------- #}
-        <div class="container"> {# Adicionado container aqui para alinhar as tips #}
+            
             {% if tips_categorias.proximos %}
                 <h2 class="mb-4 text-light"><i class="fas fa-forward me-2 text-info"></i> Próximos Jogos</h2>
                 <div class="row">
@@ -110,89 +189,41 @@
                 <hr class="my-5">
             {% endif %}
         </div>
-        
-        {# ----------------------------------------------------------- #}
-        {# --- SEÇÃO 3: JOGOS PASSADOS (CONCLUÍDOS) --- #}
-        {# ----------------------------------------------------------- #}
-        <div class="container"> {# Adicionado container aqui para alinhar as tips #}
-            {% if tips_categorias.concluidos %}
-                <h2 class="mb-4 text-light"><i class="fas fa-history me-2 text-secondary"></i> Jogos Passados (Concluídos)</h2>
-                <div class="row">
-                    {% for tip in tips_categorias.concluidos %}
-                        {% include "tips_core/includes/tip_card.html" with tip=tip %}
-                    {% endfor %}
-                </div>
-                <hr class="my-5">
-            {% endif %}
-        </div>
-
-        {# ----------------------------------------------------------- #}
-        {# --- SEÇÃO 4: JOGOS PASSADOS (RESULTADO PENDENTE/ERRO) --- #}
-        {# ----------------------------------------------------------- #}
-        <div class="container"> {# Adicionado container aqui para alinhar as tips #}
-            {% if tips_categorias.passados %}
-                <h2 class="mb-4 text-light"><i class="fas fa-exclamation-triangle me-2 text-danger"></i> Jogos Passados (Resultado Pendente)</h2>
-                <div class="row">
-                    {% for tip in tips_categorias.passados %}
-                        {% include "tips_core/includes/tip_card.html" with tip=tip %}
-                    {% endfor %}
-                </div>
-                <hr class="my-5">
-            {% endif %}
-        </div>
-        
     {% endif %}
-    {# FIM DO BLOCO CONDICIONAL DAS TIPS GRATUITAS #}
 
 
-    {# --- INÍCIO: BLOCO DE JOGOS DO AISCORE (LARGURA TOTAL) --- #}
+    {# --- BLOCO DE JOGOS DO AISCORE (VISÍVEL PARA NÃO LOGADOS) --- #}
     {% if not user.is_authenticated %}
         <div class="row mb-5"> 
-            {# Título da seção dentro do container para alinhamento #}
             <div class="container">
                 <h2 class="col-12 text-light fw-bold mb-4 border-bottom pb-2 text-start px-0">Jogos e Placar ao Vivo</h2>
             </div>
-            
-            {# Este bloco col-12 px-0 é o que vai esticar para as bordas #}
             <div class="col-12 px-0"> 
                 <div id="aiscore-free"></div>
-                
                 <script language="javascript">
                     document.getElementById("aiscore-free").innerHTML="<iframe src='https://www.aiscore.com/br?width=1200&theme=blue' height='800' width='100%' scrolling='auto' border='0' frameborder='0'></iframe>";
                 </script>
-                
                 <style>
-                    /* Estilos para o contêiner do widget */
-                    #aiscore-free{
-                        display:flex;
-                        justify-content:center;
-                        height: 800px; 
-                    }
-                    body{margin:0} 
+                    #aiscore-free{ display:flex; justify-content:center; height: 800px; }
                 </style>
-
             </div>
         </div>
         <hr class="my-5">
     {% endif %}
-    {# --- FIM: BLOCO DE JOGOS DO AISCORE --- #}
 
 
-    <div class="container"> {# Retorna o container para o rodapé/botão premium #}
+    {# --- RODAPÉ PREMIUM --- #}
+    <div class="container"> 
         <div class="text-center p-3 hero-section-card rounded">
             <h3 class="fw-bold text-light">Faça parte da nossa comunidade + para 18 anos.</h3>
-            <p class="lead text-light">Acesso exclusivo e análises aprofundadas que não estão disponíveis publicamente.</p>
+            <p class="lead text-light">Acesso exclusivo e análises aprofundadas.</p>
             
             {% if user.is_premium_member %}
-                <a href="{% url 'premium_tips_content' %}" class="btn btn-primary btn-lg mt-3">
-                    Ver Conteúdo Premium <i class="fa fa-lock-open"></i>
-                </a>
+                <a href="{% url 'premium_tips_content' %}" class="btn btn-primary btn-lg mt-3">Ver Conteúdo Premium <i class="fa fa-lock-open"></i></a>
             {% else %}
                 <form method="post" action="{% url 'choose_plan' %}" style="display: inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-warning btn-lg mt-3 fw-bold text-dark">
-                        Assinar Premium Agora! <i class="fa fa-crown"></i>
-                    </button>
+                    <button type="submit" class="btn btn-warning btn-lg mt-3 fw-bold text-dark">Assinar Premium Agora! <i class="fa fa-crown"></i></button>
                 </form>
             {% endif %}
         </div>
