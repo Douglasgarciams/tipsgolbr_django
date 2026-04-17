@@ -52,7 +52,7 @@
         </div>
     </div>
 
-    {# TABELA DE JOGOS #}
+    {# TABELA DE JOGOS ATUALIZADA #}
     <div class="card bg-dark text-light p-3 shadow">
         <h4 class="mb-3 border-bottom pb-2">Histórico de Confrontos</h4>
         <div class="table-responsive">
@@ -64,7 +64,7 @@
                         <th class="text-center">Mandante</th>
                         <th class="text-center">Placar</th>
                         <th class="text-center">Visitante</th>
-                    </tr>
+                        <th class="text-center">Método</th> <th class="text-center">Odd</th>    </tr>
                 </thead>
                 <tbody>
                     {% for jogo in jogos %}
@@ -80,10 +80,22 @@
                         <td class="text-center {% if jogo.away_team == time %}fw-bold text-warning{% endif %}">
                             {{ jogo.away_team.name }}
                         </td>
+                        
+                        {# EXIBIÇÃO DO MÉTODO #}
+                        <td class="text-center">
+                            <span class="text-info small fw-bold">{{ jogo.get_method_display }}</span>
+                        </td>
+
+                        {# EXIBIÇÃO DA ODD (odd_value) #}
+                        <td class="text-center">
+                            <span class="badge border border-secondary text-light">
+                                {{ jogo.odd_value|floatformat:2 }}
+                            </span>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center text-muted">Nenhum jogo registrado para este time ainda.</td>
+                        <td colspan="7" class="text-center text-muted">Nenhum jogo registrado para este time ainda.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

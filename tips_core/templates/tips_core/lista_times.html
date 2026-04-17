@@ -33,7 +33,7 @@
                     
                     <td class="text-info">{{ time.ultimo_metodo|default:"--" }}</td>
                     
-                    <td class="text-secondary">{{ time.odd_media|default:"0.00" }}</td>
+                    <td class="text-secondary">{{ time.odd_media|floatformat:2 }}</td>
 
                     <td>
                         <a href="{% url 'detalhes_time' time.id %}" class="btn btn-sm btn-outline-warning">
