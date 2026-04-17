@@ -6,7 +6,8 @@ from datetime import datetime, timedelta, date # Adicionado 'date'
 import pytz 
 from django.contrib.auth import get_user_model, update_session_auth_hash 
 # IMPORTAÇÕES ESSENCIAIS PARA O CÁLCULO DE ANÁLISE
-from django.db.models import Sum, Count, F, Case, When, DecimalField, Max, functions, Q # Adicionado Max e functions
+from django.db.models import Sum, Count, F, Case, When, DecimalField, Max, functions, Q, Avg, Subquery, OuterRef# Adicionado Max e functions
+from django.db.models.functions import Coalesce
 from django.conf import settings 
 from .models import Tip, Noticia, Assinatura, METHOD_CHOICES, PromocaoBanner, Team
 from .forms import CustomUserCreationForm
@@ -357,18 +358,38 @@ def confirm_payment(request, username):
 
 @login_required
 def lista_times(request):
-    # 1. Captura o que o usuário digitou no campo de busca (name="search")
-    search_query = request.GET.get('search')
-    
-    # 2. Se houver algo digitado, filtra. Se não, pega tudo.
+    search_query = request.GET.get('search', '')
+
+    # Subquery para buscar o método da última Tip
+    ultima_tip_subquery = Tip.objects.filter(
+        Q(home_team=OuterRef('pk')) | Q(away_team=OuterRef('pk'))
+    ).order_by('-match_date').values('method')[:1]
+
+    times = Team.objects.all()
+
     if search_query:
-        times = Team.objects.filter(name__icontains=search_query).order_by('name')
-        print(f"--- DEBUG: BUSCA POR '{search_query}' RETORNOU {times.count()} TIMES ---")
-    else:
-        times = Team.objects.all().order_by('name')
-        print(f"--- DEBUG: O DJANGO ESTÁ LENDO {times.count()} TIMES (LISTA COMPLETA) ---")
+        times = times.filter(name__icontains=search_query)
+
+    # Corrigindo a mistura de tipos (Mixed Types) usando output_field
+    times = times.annotate(
+        ultimo_metodo_code=Subquery(ultima_tip_subquery),
+        odd_media=(
+            Coalesce(Avg('home_matches__odd_value'), 0, output_field=DecimalField()) + 
+            Coalesce(Avg('away_matches__odd_value'), 0, output_field=DecimalField())
+        ) / 2
+    ).order_by('name')
+
+    # Mapeamento para nomes amigáveis
+    method_dict = dict(METHOD_CHOICES)
+    for time in times:
+        time.ultimo_metodo_display = method_dict.get(time.ultimo_metodo_code, "--")
+
+    context = {
+        'times': times,
+        'title': 'Banco de Dados de Performance'
+    }
     
-    return render(request, 'tips_core/lista_times.html', {'times': times})
+    return render(request, 'tips_core/lista_times.html', context)
 
 @login_required
 def detalhes_time(request, team_id):

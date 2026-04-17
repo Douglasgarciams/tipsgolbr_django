@@ -2,11 +2,11 @@
 {% block content %}
 <div class="container mt-5 pt-4">
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-        <h2 class="text-light fw-bold mb-0">Escolha um Time</h2>
+        <h2 class="text-light fw-bold mb-0"><i class="fas fa-database text-warning me-2"></i>Banco de Dados de Times</h2>
         
         <form method="GET" action="" class="d-flex">
             <input type="text" name="search" class="form-control bg-dark text-light border-secondary me-2" 
-                   placeholder="Buscar time..." value="{{ request.GET.search|default:'' }}">
+                   placeholder="Buscar time ou liga..." value="{{ request.GET.search|default:'' }}">
             <button class="btn btn-warning" type="submit">
                 <i class="fas fa-search"></i> Buscar
             </button>
@@ -16,31 +16,48 @@
         </form>
     </div>
 
-    <div class="row">
-        {% for time in times %}
-        <div class="col-md-3 mb-3">
-            <a href="{% url 'detalhes_time' time.id %}" class="text-decoration-none">
-                <div class="card bg-dark text-warning border-secondary text-center p-3 h-100 shadow-sm hover-effect">
-                    <h5 class="mb-0">{{ time.name }}</h5>
-                </div>
-            </a>
-        </div>
-        {% empty %}
-        <div class="col-12 text-center mt-5">
-            <p class="text-muted">Nenhum time encontrado com esse nome.</p>
-        </div>
-        {% endfor %}
+    <div class="table-responsive bg-dark rounded shadow-lg p-3">
+        <table class="table table-dark table-striped table-hover align-middle text-center">
+            <thead>
+                <tr class="text-warning">
+                    <th class="text-start">Time</th>
+                    <th>Último Método</th>
+                    <th>Odd Média</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for time in times %}
+                <tr>
+                    <td class="fw-bold text-light text-start">{{ time.name }}</td>
+                    
+                    <td class="text-info">{{ time.ultimo_metodo|default:"--" }}</td>
+                    
+                    <td class="text-secondary">{{ time.odd_media|default:"0.00" }}</td>
+
+                    <td>
+                        <a href="{% url 'detalhes_time' time.id %}" class="btn btn-sm btn-outline-warning">
+                            <i class="fas fa-eye"></i> Detalhes
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-muted py-5">Nenhum dado encontrado para esta busca.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
 <style>
-    .hover-effect:hover {
-        border-color: #ffc107 !important;
-        transform: translateY(-5px);
+    /* Estilo para manter a identidade visual do TipsGolBR */
+    .table { --bs-table-bg: transparent; }
+    .table-hover tbody tr:hover {
+        background-color: rgba(255, 193, 7, 0.05) !important;
         transition: 0.3s;
-        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2) !important;
     }
-    /* Estilo para o campo de busca não ficar azul ao clicar */
     .form-control:focus {
         background-color: #212529 !important;
         color: white !important;
