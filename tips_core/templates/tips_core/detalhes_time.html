@@ -52,55 +52,65 @@
         </div>
     </div>
 
-    {# TABELA DE JOGOS ATUALIZADA #}
-    <div class="card bg-dark text-light p-3 shadow">
-        <h4 class="mb-3 border-bottom pb-2">Histórico de Confrontos</h4>
-        <div class="table-responsive">
-            <table class="table table-dark table-hover align-middle">
-                <thead class="text-warning">
-                    <tr>
-                        <th>Data</th>
-                        <th>Competição</th>
-                        <th class="text-center">Mandante</th>
-                        <th class="text-center">Placar</th>
-                        <th class="text-center">Visitante</th>
-                        <th class="text-center">Método</th> <th class="text-center">Odd</th>    </tr>
-                </thead>
-                <tbody>
-                    {% for jogo in jogos %}
-                    <tr>
-                        <td class="small">{{ jogo.match_date|date:"d/m/Y" }}</td>
-                        <td><span class="badge bg-secondary">{{ jogo.league }}</span></td>
-                        <td class="text-center {% if jogo.home_team == time %}fw-bold text-warning{% endif %}">
-                            {{ jogo.home_team.name }}
-                        </td>
-                        <td class="text-center fw-bold bg-secondary rounded">
-                            {{ jogo.score_home }} - {{ jogo.score_away }}
-                        </td>
-                        <td class="text-center {% if jogo.away_team == time %}fw-bold text-warning{% endif %}">
-                            {{ jogo.away_team.name }}
-                        </td>
-                        
-                        {# EXIBIÇÃO DO MÉTODO #}
-                        <td class="text-center">
-                            <span class="text-info small fw-bold">{{ jogo.get_method_display }}</span>
-                        </td>
+    {# TABELA DE JOGOS ATUALIZADA COM COLUNA DE RESULTADO #}
+<div class="card bg-dark text-light p-3 shadow">
+    <h4 class="mb-3 border-bottom pb-2">Histórico de Confrontos</h4>
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle">
+            <thead class="text-warning">
+                <tr>
+                    <th>Data</th>
+                    <th>Competição</th>
+                    <th class="text-center">Mandante</th>
+                    <th class="text-center">Placar</th>
+                    <th class="text-center">Visitante</th>
+                    <th class="text-center">Método</th>
+                    <th class="text-center">Odd</th>
+                    <th class="text-center">Resultado</th> </tr>
+            </thead>
+            <tbody>
+                {% for jogo in jogos %}
+                <tr>
+                    <td class="small">{{ jogo.match_date|date:"d/m/Y" }}</td>
+                    <td><span class="badge bg-secondary">{{ jogo.league }}</span></td>
+                    <td class="text-center {% if jogo.home_team == time %}fw-bold text-warning{% endif %}">
+                        {{ jogo.home_team.name }}
+                    </td>
+                    <td class="text-center fw-bold bg-secondary rounded">
+                        {{ jogo.score_home }} - {{ jogo.score_away }}
+                    </td>
+                    <td class="text-center {% if jogo.away_team == time %}fw-bold text-warning{% endif %}">
+                        {{ jogo.away_team.name }}
+                    </td>
+                    
+                    <td class="text-center">
+                        <span class="text-info small fw-bold">{{ jogo.get_method_display }}</span>
+                    </td>
 
-                        {# EXIBIÇÃO DA ODD (odd_value) #}
-                        <td class="text-center">
-                            <span class="badge border border-secondary text-light">
-                                {{ jogo.odd_value|floatformat:2 }}
-                            </span>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">Nenhum jogo registrado para este time ainda.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                    <td class="text-center">
+                        <span class="text-light">{{ jogo.odd_value|floatformat:2 }}</span>
+                    </td>
+
+                    {# LÓGICA DA NOVA COLUNA: GANHO OU PERDA #}
+                    <td class="text-center">
+                        {% if jogo.status == 'WIN' %}
+                            <span class="badge bg-success w-100" style="max-width: 80px;">GANHO</span>
+                        {% elif jogo.status == 'LOSS' %}
+                            <span class="badge bg-danger w-100" style="max-width: 80px;">PERDA</span>
+                        {% elif jogo.status == 'VOID' %}
+                            <span class="badge bg-secondary w-100" style="max-width: 80px;">ANULADA</span>
+                        {% else %}
+                            <span class="badge bg-dark border border-secondary text-muted w-100" style="max-width: 80px;">Pendente</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted">Nenhum jogo registrado para este time ainda.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}
