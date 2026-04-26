@@ -5,12 +5,50 @@
 {% block content %}
 <div class="container mt-5">
     <h1 class="text-light fw-bold mb-4 border-bottom pb-2">{{ title }}</h1>
+    
+    {# --- NOVO: FORMULÁRIO DE FILTRO DE DATA --- #}
+    <div class="card bg-dark border-secondary p-3 mb-4 shadow">
+        <form method="GET" action="" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="text-warning small fw-bold mb-1">Filtrar por Mês</label>
+                <select name="month" class="form-select bg-dark text-light border-secondary">
+                    <option value="all" {% if not selected_month or selected_month == 'all' %}selected{% endif %}>Todos os Meses</option>
+                    <option value="1" {% if selected_month == '1' %}selected{% endif %}>Janeiro</option>
+                    <option value="2" {% if selected_month == '2' %}selected{% endif %}>Fevereiro</option>
+                    <option value="3" {% if selected_month == '3' %}selected{% endif %}>Março</option>
+                    <option value="4" {% if selected_month == '4' %}selected{% endif %}>Abril</option>
+                    <option value="5" {% if selected_month == '5' %}selected{% endif %}>Maio</option>
+                    <option value="6" {% if selected_month == '6' %}selected{% endif %}>Junho</option>
+                    <option value="7" {% if selected_month == '7' %}selected{% endif %}>Julho</option>
+                    <option value="8" {% if selected_month == '8' %}selected{% endif %}>Agosto</option>
+                    <option value="9" {% if selected_month == '9' %}selected{% endif %}>Setembro</option>
+                    <option value="10" {% if selected_month == '10' %}selected{% endif %}>Outubro</option>
+                    <option value="11" {% if selected_month == '11' %}selected{% endif %}>Novembro</option>
+                    <option value="12" {% if selected_month == '12' %}selected{% endif %}>Dezembro</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="text-warning small fw-bold mb-1">Ano</label>
+                <select name="year" class="form-select bg-dark text-light border-secondary">
+                    <option value="all" {% if not selected_year or selected_year == 'all' %}selected{% endif %}>Todos os Anos</option>
+                    {% for year in years_range %}
+                        <option value="{{ year }}" {% if selected_year == year|stringformat:"i" %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-warning w-100 fw-bold">
+                    <i class="fas fa-filter me-1"></i> Filtrar Performance
+                </button>
+            </div>
+        </form>
+    </div>
+
     <p class="text-secondary lead">Resumo de performance por método de aposta concluída (Ganhos e Perdas).</p>
 
     {% if summary %}
-
         <div class="mt-4 p-3 bg-dark rounded shadow-lg">
-            <h5 class="text-light">Totais Globais (Apostas Concluídas)</h5>
+            <h5 class="text-light">Totais Globais (Período Selecionado)</h5>
             <p class="lead fw-bold text-light">
                 Lucro Líquido Geral: 
                 <span class="{% if global_net_profit > 0 %}text-success{% elif global_net_profit < 0 %}text-danger{% else %}text-secondary{% endif %}">
@@ -26,7 +64,7 @@
             <table class="table table-dark table-striped table-hover align-middle">
                 <thead>
                     <tr>
-                        <th class="text-info">Data</th>
+                        <th class="text-info">Última Tip</th>
                         <th class="text-warning">Método</th>
                         <th>Total Apostado (R$)</th>
                         <th>Lucro Líquido (R$)</th>
@@ -94,7 +132,7 @@
         </div>
 
     {% else %}
-        <div class="alert alert-info text-center">Nenhum resultado concluído para gerar resumo.</div>
+        <div class="alert alert-info text-center mt-4">Nenhum resultado concluído para este período.</div>
     {% endif %}
     
     <div class="mt-5 text-center">
@@ -104,6 +142,7 @@
 
 <style>
 .table-responsive { overflow-x: auto; }
+.form-select:focus { border-color: #ffc107; box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25); }
 </style>
 
 {% block extra_js %}
@@ -114,6 +153,7 @@ Chart.register(ChartDataLabels);
 
 document.addEventListener("DOMContentLoaded", () => {
     const rows = document.querySelectorAll("tbody tr");
+    if (rows.length === 0) return;
 
     let labelsMetodos = [];
     let profitDataMetodos = [];
@@ -121,26 +161,21 @@ document.addEventListener("DOMContentLoaded", () => {
     let lossCount = 0;
     let profitColors = [];
 
-    // ---- COLETA E PROCESSAMENTO DE DADOS ----
     rows.forEach(row => {
         const method = row.dataset.method;
         const profit = parseFloat(row.dataset.profit.replace(',', '.'));
         const wins = parseInt(row.dataset.wins);
         const losses = parseInt(row.dataset.losses);
 
-        // Dados para Gráfico por Método
         labelsMetodos.push(method);
         profitDataMetodos.push(profit);
         profitColors.push(profit >= 0 ? "rgba(25,135,84,0.8)" : "rgba(220,53,69,0.8)");
 
-        // Dados para Win/Loss Global
         winCount += wins;
         lossCount += losses;
     });
 
-    // ------------------------------------------------------------------
-    // GRÁFICO 1 – LUCRO POR MÉTODO (BARRAS)
-    // ------------------------------------------------------------------
+    // GRÁFICO 1 – LUCRO POR MÉTODO
     new Chart(document.getElementById("profitChart"), {
         type: "bar",
         data: {
@@ -171,9 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // ------------------------------------------------------------------
-    // GRÁFICO 2 – WIN/LOSS (ROSCA)
-    // ------------------------------------------------------------------
+    // GRÁFICO 2 – WIN/LOSS
     new Chart(document.getElementById("winLossChart"), {
         type: "doughnut",
         data: {

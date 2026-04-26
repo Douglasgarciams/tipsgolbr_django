@@ -116,13 +116,23 @@ def access_denied(request):
 def analysis_dashboard(request):
     """
     Calcula e exibe o resumo de ganhos e perdas por Método de Aposta,
-    incluindo dados históricos mensais para o gráfico de linha.
+    incluindo dados históricos mensais para o gráfico de linha e filtros.
     """
-    
-    # 1. Filtra apenas as apostas CONCLUÍDAS (WIN, LOSS)
+    # 1. Captura de filtros da URL (via GET)
+    today = timezone.localtime(timezone.now())
+    month_filter = request.GET.get('month')
+    year_filter = request.GET.get('year')
+
+    # 2. Filtra apenas as apostas CONCLUÍDAS (WIN, LOSS)
     concluded_tips = Tip.objects.filter(status__in=['WIN', 'LOSS'])
+
+    # 3. Aplicação dos filtros na QuerySet (Se selecionados)
+    if month_filter and month_filter != 'all':
+        concluded_tips = concluded_tips.filter(match_date__month=month_filter)
+    if year_filter and year_filter != 'all':
+        concluded_tips = concluded_tips.filter(match_date__year=year_filter)
     
-    # 2. Define o Lucro Líquido (USADO EM MÚLTIPLAS CONSULTAS)
+    # 4. Define a lógica do Lucro Líquido
     net_profit_case = Case(
         When(status='WIN', then=F('valor_ganho')), 
         When(status='LOSS', then=F('valor_perda') * -1), 
@@ -137,57 +147,40 @@ def analysis_dashboard(request):
         total_apostas=Count('id'),
         total_wins=Count(Case(When(status='WIN', then=1))),
         total_losses=Count(Case(When(status='LOSS', then=1))),
-        # ADICIONADO: Data da última partida para a coluna da tabela
         match_date=Max('match_date'), 
     ).order_by('-lucro_liquido_total')
 
-    # -----------------------------------------------------
-    # --- CONSULTA 2: EVOLUÇÃO MENSAL (Gráfico de Linha) ---
-    # -----------------------------------------------------
-    # Agrupa por Ano e Mês para obter o lucro líquido por período.
-    monthly_summary = concluded_tips.annotate(
+    # --- CONSULTA 2: EVOLUÇÃO MENSAL (Gráfico de Linha - Histórico Global) ---
+    # Usamos Tip.objects diretamente para o gráfico não "sumir" ao filtrar um mês específico
+    evolution_tips = Tip.objects.filter(status__in=['WIN', 'LOSS'])
+    
+    monthly_summary = evolution_tips.annotate(
         year=functions.ExtractYear('match_date'),
         month=functions.ExtractMonth('match_date')
     ).values('year', 'month').annotate(
         monthly_profit=Sum(net_profit_case)
     ).order_by('year', 'month')
     
-    
-    # -----------------------------------------------------
     # --- FORMATAÇÃO DOS DADOS MENSAIS PARA O CHART.JS ---
-    # -----------------------------------------------------
     monthly_labels = []
     monthly_profits = []
-    
-    # Gera os nomes dos meses
     MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
-    
-    # Calcula o lucro ACUMULADO (necessário para o gráfico de linha)
     cumulative_profit = 0
     
     for entry in monthly_summary:
-        month_name = MONTH_NAMES[entry['month'] - 1] # -1 porque JS é 0-indexed
+        month_name = MONTH_NAMES[entry['month'] - 1]
         label = f"{month_name}/{entry['year']}"
-        
-        # Lucro líquido do mês
         profit_of_month = entry['monthly_profit'] or 0 
-        
-        # Lucro ACUMULADO até o final daquele mês
         cumulative_profit += profit_of_month
-        
         monthly_labels.append(label)
-        monthly_profits.append(float(cumulative_profit)) # O JS precisa de float
+        monthly_profits.append(float(cumulative_profit))
 
-    # Dicionário final que será serializado para o JavaScript
     monthly_data_for_chart = {
         'labels': monthly_labels,
         'data': monthly_profits
     }
     
-    # -----------------------------------------------------
     # --- FORMATAÇÃO FINAL PARA O CONTEXTO ---
-    # -----------------------------------------------------
-
     global_totals = concluded_tips.aggregate(
         total_stakes=Sum('valor_aposta'),
         total_net_profit=Sum(net_profit_case)
@@ -199,11 +192,7 @@ def analysis_dashboard(request):
     for item in summary_data:
         total_aposta_decimal = item['total_aposta']
         lucro_liquido_total_decimal = item['lucro_liquido_total']
-        
-        if total_aposta_decimal and total_aposta_decimal != 0:
-            yield_percent = (lucro_liquido_total_decimal / total_aposta_decimal) * 100
-        else:
-            yield_percent = 0.0
+        yield_percent = (lucro_liquido_total_decimal / total_aposta_decimal * 100) if total_aposta_decimal else 0.0
 
         analysis_summary.append({
             'method_code': item['method'],
@@ -214,22 +203,26 @@ def analysis_dashboard(request):
             'total_wins': item['total_wins'],
             'total_losses': item['total_losses'],
             'yield_percent': yield_percent,
-            # Passa a data corrigida para o template
             'match_date': item['match_date'], 
         })
+
+    # Lista de anos para o filtro (3 anos atrás até o atual)
+    years_range = range(today.year - 2, today.year + 1)
 
     context = {
         'title': 'Dashboard de Análise de Desempenho',
         'summary': analysis_summary,
         'global_stakes': global_totals.get('total_stakes') or 0,
         'global_net_profit': global_totals.get('total_net_profit') or 0,
-        # NOVO: Dados mensais reais para o Gráfico de Linha
         'monthly_data_json': json.dumps(monthly_data_for_chart),
+        'selected_month': month_filter,
+        'selected_year': year_filter,
+        'years_range': years_range,
     }
     return render(request, 'tips_core/analysis_dashboard.html', context)
 
 
-# --- VIEW DA CALCULADORA (NOVA) ---
+# --- VIEW DA CALCULADORA ---
 def calculator_page(request):
     """Renderiza a página da Calculadora Dutching."""
     return render(request, 'tips_core/dutching_calculator.html', {
