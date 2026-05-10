@@ -4,6 +4,33 @@
 {% block title %}Tips e Análises do Dia{% endblock %}
 
 {% block content %}
+
+<div id="responsible-gaming-alert" class="alert alert-dark border-warning shadow-sm mb-4" style="display: none; background-color: #1a1a1a;">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="text-light small">
+            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+            <strong>JOGO RESPONSÁVEL:</strong> O trade esportivo envolve riscos financeiros. Nunca aposte valores destinados a despesas essenciais. 
+            Apostas são para maiores de <strong>18 anos</strong>. Jogue com consciência.
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-warning ms-3" onclick="closeRGAlert()">Entendi</button>
+    </div>
+</div>
+
+<script>
+    function closeRGAlert() {
+        localStorage.setItem('rg-alert-closed', new Date().getTime());
+        document.getElementById('responsible-gaming-alert').style.display = 'none';
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const lastClosed = localStorage.getItem('rg-alert-closed');
+        const now = new Date().getTime();
+        // Reapresenta após 24 horas (86400000 ms)
+        if (!lastClosed || (now - lastClosed) > 86400000) {
+            document.getElementById('responsible-gaming-alert').style.display = 'block';
+        }
+    });
+</script>
     
     {# CONTAINER CENTRALIZADO PARA O HERO SECTION (BANNER/CARROSSEL/BOTÕES) #}
     <div class="container"> 
@@ -99,6 +126,187 @@
             </div>
         </div>
 
+        <div class="container mt-5 pt-4" id="guia-apostador">
+    <h2 class="text-light fw-bold mb-4 border-bottom pb-2">
+        <i class="fas fa-graduation-cap text-warning me-2"></i>Guia Prático e Glossário do Trader
+    </h2>
+    <p class="text-secondary mb-4">Entenda os conceitos fundamentais para operar no mercado esportivo com profissionalismo e segurança.</p>
+
+    <div class="accordion accordion-flush shadow-lg rounded" id="accordionGlossario">
+        
+        {# ITEM 1: BACK #}
+        <div class="accordion-item bg-dark border-secondary">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-dark text-warning fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                    O que é "BACK" (Apostar a Favor)?
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionGlossario">
+                <div class="accordion-body text-light opacity-75">
+                    Fazer um <strong>Back</strong> significa que você está apostando que um evento <strong>vai acontecer</strong>. 
+                    Por exemplo, "Back Real Madrid" significa que você ganha se o Real Madrid vencer a partida. É o modelo mais tradicional de aposta.
+                </div>
+            </div>
+        </div>
+
+        {# ITEM 2: LAY #}
+        <div class="accordion-item bg-dark border-secondary">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-dark text-warning fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                    O que é "LAY" (Apostar Contra)?
+                </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionGlossario">
+                <div class="accordion-body text-light opacity-75">
+                    O <strong>Lay</strong> é o diferencial do Trade Esportivo. Fazer um Lay significa que você aposta que um evento <strong>NÃO vai acontecer</strong>. 
+                    Se você faz um "Lay ao Empate", você ganha se qualquer um dos times vencer. No Lay, você assume o papel da "Casa de Apostas".
+                </div>
+            </div>
+        </div>
+
+        {# ITEM 3: ODDS #}
+        <div class="accordion-item bg-dark border-secondary">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-dark text-warning fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                    Entendendo as ODDS (Cotações)
+                </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionGlossario">
+                <div class="accordion-body text-light opacity-75">
+                    As <strong>Odds</strong> representam a probabilidade inversa de um evento ocorrer. Além de ditar o seu lucro potencial (Lucro = Stake x (Odd - 1)), elas indicam o risco. 
+                    Quanto menor a Odd, maior a probabilidade teórica daquele resultado acontecer.
+                </div>
+            </div>
+        </div>
+
+        {# ITEM 4: STAKE #}
+        <div class="accordion-item bg-dark border-secondary">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-dark text-warning fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                    Gestão de STAKE (Banca)
+                </button>
+            </h2>
+            <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionGlossario">
+                <div class="accordion-body text-light opacity-75">
+                    A <strong>Stake</strong> é o valor em dinheiro que você coloca em uma única operação. A gestão de banca é o pilar mais importante: 
+                    recomendamos nunca utilizar mais de 2% a 5% do seu capital total em uma única entrada para garantir a sobrevivência no longo prazo.
+                </div>
+            </div>
+        </div>
+
+        {# ITEM 5: MATCH ODDS #}
+        <div class="accordion-item bg-dark border-secondary">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-dark text-warning fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive">
+                    Mercado de MATCH ODDS (1X2)
+                </button>
+            </h2>
+            <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#accordionGlossario">
+                <div class="accordion-body text-light opacity-75">
+                    O <strong>Match Odds</strong> é o mercado principal de uma partida de futebol. Nele, você opera no resultado final: 
+                    Vitória do Mandante (1), Empate (X) ou Vitória do Visitante (2). É o mercado com maior liquidez no mundo.
+                </div>
+            </div>
+        </div>
+
+        {# ITEM 6: CORRECT SCORE #}
+        <div class="accordion-item bg-dark border-secondary">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-dark text-warning fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix">
+                    Mercado de CORRECT SCORE (Placar Exato)
+                </button>
+            </h2>
+            <div id="collapseSix" class="accordion-collapse collapse" data-bs-parent="#accordionGlossario">
+                <div class="accordion-body text-light opacity-75">
+                    No <strong>Correct Score</strong>, você tenta prever o placar exato do jogo (ex: 1x0, 2x1, 0x0). 
+                    Por ser um mercado de alta dificuldade, as Odds costumam ser muito elevadas, permitindo estratégias de proteção e "scalping" durante o jogo vivo.
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: #2c2c2c !important;
+        color: #ffc107 !important;
+        box-shadow: none;
+    }
+    .accordion-button::after {
+        filter: invert(1);
+    }
+    .accordion-item {
+        border-bottom: 1px solid #333 !important;
+    }
+</style>
+
+<div class="card bg-dark border-warning shadow-lg mb-5">
+    <div class="card-body">
+        <h4 class="text-warning fw-bold mb-3"><i class="fas fa-shield-alt me-2"></i>Calculadora de Proteção (Risco Zero)</h4>
+        <p class="text-secondary small">A Odd 1 garante seu investimento de volta. A Odd 2 busca o lucro.</p>
+        
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="text-light small">Odd 1 (Proteção)</label>
+                <input type="number" id="odd1" class="form-control bg-dark text-light border-secondary" value="1.05" step="0.01">
+            </div>
+            <div class="col-md-3">
+                <label class="text-light small">Odd 2 (Lucro)</label>
+                <input type="number" id="odd2" class="form-control bg-dark text-light border-secondary" value="1.70" step="0.01">
+            </div>
+            <div class="col-md-3">
+                <label class="text-light small">Investimento (R$)</label>
+                <input type="number" id="investimento" class="form-control bg-dark text-light border-secondary" value="1000">
+            </div>
+            <div class="col-md-3 d-grid">
+                <button onclick="calcularProtecao()" class="btn btn-warning fw-bold align-self-end">Calcular Entradas</button>
+            </div>
+        </div>
+
+        <div id="resultadoView" class="mt-4 p-3 bg-black rounded border border-secondary" style="display:none;">
+            <div class="row text-center">
+                <div class="col-md-6 border-end border-secondary">
+                    <div class="text-warning small fw-bold">ENTRADA 1 (PROTEÇÃO)</div>
+                    <div id="resAposta1" class="h4 text-light fw-bold mt-1">R$ 0,00</div>
+                    <div class="text-muted x-small">Se vencer: Você recupera seus R$ <span class="valTotal"></span></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-success small fw-bold">ENTRADA 2 (LUCRO)</div>
+                    <div id="resAposta2" class="h4 text-light fw-bold mt-1">R$ 0,00</div>
+                    <div class="text-muted x-small">Se vencer: Lucro de <span id="resLucroAbsoluto" class="text-success fw-bold">R$ 0,00</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calcularProtecao() {
+    const o1 = parseFloat(document.getElementById('odd1').value);
+    const o2 = parseFloat(document.getElementById('odd2').value);
+    const total = parseFloat(document.getElementById('investimento').value);
+
+    if (o1 > 1 && o2 > 0 && total > 0) {
+        // 1. Valor para recuperar o total investido na Odd 1
+        const aposta1 = total / o1;
+        
+        // 2. O que sobra vai para a Odd 2
+        const aposta2 = total - aposta1;
+        
+        // 3. Lucro se a Odd 2 vencer (Retorno da aposta 2)
+        const lucroBrutoAposta2 = aposta2 * o2;
+
+        document.getElementById('resAposta1').innerText = "R$ " + aposta1.toFixed(2);
+        document.getElementById('resAposta2').innerText = "R$ " + aposta2.toFixed(2);
+        document.getElementById('resLucroAbsoluto').innerText = "R$ " + lucroBrutoAposta2.toFixed(2);
+        
+        document.querySelectorAll('.valTotal').forEach(el => el.innerText = total.toFixed(2));
+        document.getElementById('resultadoView').style.display = 'block';
+    }
+}
+</script>
+
         {# --- IMPLEMENTAÇÃO 3: CENTRAL DE VÍDEOS (4 VÍDEOS) --- #}
 <h2 class="text-light fw-bold mb-4 border-bottom pb-2">Central de Vídeos Educativos</h2>
 <div class="row mb-5">
@@ -191,26 +399,30 @@
         </div>
     {% endif %}
 
-
-    {# --- BLOCO DE JOGOS DO AISCORE (VISÍVEL PARA NÃO LOGADOS) --- #}
-    {% if not user.is_authenticated %}
-        <div class="row mb-5"> 
-            <div class="container">
-                <h2 class="col-12 text-light fw-bold mb-4 border-bottom pb-2 text-start px-0">Jogos e Placar ao Vivo</h2>
-            </div>
-            <div class="col-12 px-0"> 
-                <div id="aiscore-free"></div>
-                <script language="javascript">
-                    document.getElementById("aiscore-free").innerHTML="<iframe src='https://www.aiscore.com/br?width=1200&theme=blue' height='800' width='100%' scrolling='auto' border='0' frameborder='0'></iframe>";
-                </script>
-                <style>
-                    #aiscore-free{ display:flex; justify-content:center; height: 800px; }
-                </style>
+    {# --- SEÇÃO DE CLASSIFICAÇÃO BRASILEIRÃO 2026 --- #}
+{% if not user.is_authenticated %}
+    <div class="row mb-5 justify-content-center">
+        <div class="container">
+            <h2 class="col-12 text-light fw-bold mb-4 border-bottom pb-2 text-start px-0">
+                <i class="fas fa-table text-warning me-2"></i>Classificação Brasileiro Série A 2026
+            </h2>
+        </div>
+        
+        <div class="col-12 col-lg-10 bg-dark rounded shadow-lg p-0 overflow-hidden" style="border: 1px solid #333;">
+            <iframe id="sofa-standings-embed-83-87678" 
+                    src="https://widgets.sofascore.com/pt-BR/embed/tournament/83/season/87678/standings/Brasileiro%20Serie%20A%202026?widgetTitle=Brasileiro%20Serie%20A%202026&showCompetitionLogo=true" 
+                    style="height:1123px!important; width:100%!important;" 
+                    frameborder="0" 
+                    scrolling="no">
+            </iframe>
+            <div class="p-2 text-center" style="font-size:12px; font-family:Arial,sans-serif; background: #1a1a1a;">
+                <span class="text-secondary">Classificação fornecida por </span>
+                <a target="_blank" class="text-warning text-decoration-none" href="https://www.sofascore.com/pt/football/tournament/brazil/brasileirao-serie-a/325#id:87678">Sofascore</a>
             </div>
         </div>
-        <hr class="my-5">
-    {% endif %}
-
+    </div>
+    <hr class="my-5">
+{% endif %}
 
     {# --- RODAPÉ PREMIUM --- #}
     <div class="container"> 
@@ -229,4 +441,36 @@
         </div>
     </div>
 
+    <div class="container mt-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="text-warning fw-bold">Por que utilizar o TipsGolBR para suas análises?</h2>
+            <hr class="border-warning w-25 mx-auto">
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <h5 class="text-light fw-bold"><i class="fas fa-chart-line text-warning me-2"></i>Análise Baseada em Dados</h5>
+            <p class="text-secondary small">
+                No TipsGolBR, não trabalhamos com "palpites" ou intuição. Nossa metodologia é baseada em <strong>análise estatística avançada</strong>, cruzando dados históricos de times e ligas para identificar valor real em mercados como Match Odds e Under/Over.
+            </p>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <h5 class="text-light fw-bold"><i class="fas fa-shield-alt text-warning me-2"></i>Foco em Gestão de Risco</h5>
+            <p class="text-secondary small">
+                O sucesso no longo prazo no trade esportivo depende 90% da sua <strong>gestão de banca (Stake Control)</strong>. Nossas ferramentas são desenhadas para educar o investidor a proteger seu capital antes de buscar o lucro.
+            </p>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <h5 class="text-light fw-bold"><i class="fas fa-university text-warning me-2"></i>Educação e Transparência</h5>
+            <p class="text-secondary small">
+                Mais do que apenas números, oferecemos uma <strong>base de conhecimento completa</strong> sobre os termos técnicos do mercado, como Lay, Back e Correct Score, permitindo que você entenda o "porquê" de cada operação.
+            </p>
+        </div>
+    </div>
+</div>
+    
+
 {% endblock content %}
+
