@@ -5,6 +5,17 @@
 
 {% block content %}
 
+<style>
+    .radar-container { background-color: #121212; border-radius: 15px; padding: 25px; border: 1px solid #333; }
+    .league-card { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; margin-bottom: 15px; padding: 20px; transition: 0.3s; }
+    .league-card:hover { border-color: #ffc107; background: #222; }
+    .badge-gpg { background-color: #ffc107; color: #000; font-weight: bold; border-radius: 5px; padding: 3px 10px; }
+    .text-key { color: #ffc107; font-weight: bold; font-size: 0.9rem; }
+    .nav-pills .nav-link { color: #fff; border: 1px solid #444; margin: 0 5px 10px 0; font-weight: 500; }
+    .nav-pills .nav-link.active { background-color: #ffc107 !important; color: #000 !important; border-color: #ffc107; }
+    .history-text { color: #aaa; font-size: 0.9rem; line-height: 1.5; margin-top: 10px; }
+</style>
+
 <div id="responsible-gaming-alert" class="alert alert-dark border-warning shadow-sm mb-4" style="display: none; background-color: #1a1a1a;">
     <div class="container d-flex justify-content-between align-items-center">
         <div class="text-light small">
@@ -126,7 +137,89 @@
             </div>
         </div>
 
-        <div class="container mt-5 pt-4" id="guia-apostador">
+        
+
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: #2c2c2c !important;
+        color: #ffc107 !important;
+        box-shadow: none;
+    }
+    .accordion-button::after {
+        filter: invert(1);
+    }
+    .accordion-item {
+        border-bottom: 1px solid #333 !important;
+    }
+</style>
+
+<div class="card bg-dark border-warning shadow-lg mb-5">
+    <div class="card-body">
+        <h4 class="text-warning fw-bold mb-3"><i class="fas fa-shield-alt me-2"></i>Calculadora de Proteção (Risco Zero)</h4>
+        <p class="text-secondary small">A Odd 1 garante seu investimento de volta. A Odd 2 busca o lucro.</p>
+        
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="text-light small">Odd 1 (Proteção)</label>
+                <input type="number" id="odd1" class="form-control bg-dark text-light border-secondary" value="1.05" step="0.01">
+            </div>
+            <div class="col-md-3">
+                <label class="text-light small">Odd 2 (Lucro)</label>
+                <input type="number" id="odd2" class="form-control bg-dark text-light border-secondary" value="1.70" step="0.01">
+            </div>
+            <div class="col-md-3">
+                <label class="text-light small">Investimento (R$)</label>
+                <input type="number" id="investimento" class="form-control bg-dark text-light border-secondary" value="1000">
+            </div>
+            <div class="col-md-3 d-grid">
+                <button onclick="calcularProtecao()" class="btn btn-warning fw-bold align-self-end">Calcular Entradas</button>
+            </div>
+        </div>
+
+        <div id="resultadoView" class="mt-4 p-3 bg-black rounded border border-secondary" style="display:none;">
+            <div class="row text-center">
+                <div class="col-md-6 border-end border-secondary">
+                    <div class="text-warning small fw-bold">ENTRADA 1 (PROTEÇÃO)</div>
+                    <div id="resAposta1" class="h4 text-light fw-bold mt-1">R$ 0,00</div>
+                    <div class="text-muted x-small">Se vencer: Você recupera seus R$ <span class="valTotal"></span></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-success small fw-bold">ENTRADA 2 (LUCRO)</div>
+                    <div id="resAposta2" class="h4 text-light fw-bold mt-1">R$ 0,00</div>
+                    <div class="text-muted x-small">Se vencer: Lucro de <span id="resLucroAbsoluto" class="text-success fw-bold">R$ 0,00</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calcularProtecao() {
+    const o1 = parseFloat(document.getElementById('odd1').value);
+    const o2 = parseFloat(document.getElementById('odd2').value);
+    const total = parseFloat(document.getElementById('investimento').value);
+
+    if (o1 > 1 && o2 > 0 && total > 0) {
+        // 1. Valor para recuperar o total investido na Odd 1
+        const aposta1 = total / o1;
+        
+        // 2. O que sobra vai para a Odd 2
+        const aposta2 = total - aposta1;
+        
+        // 3. Lucro se a Odd 2 vencer (Retorno da aposta 2)
+        const lucroBrutoAposta2 = aposta2 * o2;
+
+        document.getElementById('resAposta1').innerText = "R$ " + aposta1.toFixed(2);
+        document.getElementById('resAposta2').innerText = "R$ " + aposta2.toFixed(2);
+        document.getElementById('resLucroAbsoluto').innerText = "R$ " + lucroBrutoAposta2.toFixed(2);
+        
+        document.querySelectorAll('.valTotal').forEach(el => el.innerText = total.toFixed(2));
+        document.getElementById('resultadoView').style.display = 'block';
+    }
+}
+</script>
+
+<div class="container mt-5 pt-4" id="guia-apostador">
     <h2 class="text-light fw-bold mb-4 border-bottom pb-2">
         <i class="fas fa-graduation-cap text-warning me-2"></i>Guia Prático e Glossário do Trader
     </h2>
@@ -227,85 +320,366 @@
     </div>
 </div>
 
-<style>
-    .accordion-button:not(.collapsed) {
-        background-color: #2c2c2c !important;
-        color: #ffc107 !important;
-        box-shadow: none;
-    }
-    .accordion-button::after {
-        filter: invert(1);
-    }
-    .accordion-item {
-        border-bottom: 1px solid #333 !important;
-    }
-</style>
+<div class="container mt-5 mb-5 radar-container shadow-lg">
+    <div class="text-center mb-5">
+        <h2 class="text-light fw-bold">📊 Radar de Ligas TipsGolBR (2024-2026)</h2>
+        <p class="text-secondary">A maior base de inteligência estatística para trading esportivo do Brasil.</p>
+    </div>
 
-<div class="card bg-dark border-warning shadow-lg mb-5">
-    <div class="card-body">
-        <h4 class="text-warning fw-bold mb-3"><i class="fas fa-shield-alt me-2"></i>Calculadora de Proteção (Risco Zero)</h4>
-        <p class="text-secondary small">A Odd 1 garante seu investimento de volta. A Odd 2 busca o lucro.</p>
+    <ul class="nav nav-pills justify-content-center mb-4" id="radarTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-over"><i class="fas fa-fire me-2"></i>Top 10 Over FT</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-under"><i class="fas fa-shield-alt me-2"></i>Top 10 Under FT</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-btts"><i class="fas fa-exchange-alt me-2"></i>Top 10 BTTS</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-ht"><i class="fas fa-bolt me-2"></i>Top 10 Over HT</button></li>
+    </ul>
+
+    <div class="tab-content">
         
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label class="text-light small">Odd 1 (Proteção)</label>
-                <input type="number" id="odd1" class="form-control bg-dark text-light border-secondary" value="1.05" step="0.01">
-            </div>
-            <div class="col-md-3">
-                <label class="text-light small">Odd 2 (Lucro)</label>
-                <input type="number" id="odd2" class="form-control bg-dark text-light border-secondary" value="1.70" step="0.01">
-            </div>
-            <div class="col-md-3">
-                <label class="text-light small">Investimento (R$)</label>
-                <input type="number" id="investimento" class="form-control bg-dark text-light border-secondary" value="1000">
-            </div>
-            <div class="col-md-3 d-grid">
-                <button onclick="calcularProtecao()" class="btn btn-warning fw-bold align-self-end">Calcular Entradas</button>
+        <div class="tab-pane fade show active" id="tab-over">
+            <h4 class="text-warning mb-4"><i class="fas fa-chart-line me-2"></i>As Ligas Mais "Over" do Mundo</h4>
+            <div class="row">
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">1. Eerste Divisie (Holanda - 2ª Divisão)</h5>
+                        <span class="badge-gpg">~3.32 Gols/Jogo</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> É considerada por muitos analistas como a liga mais previsível para o mercado de Over. Por ser uma liga de desenvolvimento, os times jogam sem grandes pressões defensivas e priorizam o ataque.</p>
+                    <p class="text-key mb-0">Ponto Chave: Frequentemente apresenta jogos com mais de 4 ou 5 gols.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">2. Bundesliga (Alemanha - 1ª Divisão)</h5>
+                        <span class="badge-gpg">~3.15 Gols/Jogo</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Entre as "Big Five" (as 5 maiores da Europa), é a líder absoluta em gols. O estilo de jogo alemão é baseado em transição rápida e pressão alta.</p>
+                    <p class="text-key mb-0">Ponto Chave: Raramente termina em 0-0. É a elite do futebol ofensivo.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">3. Eredivisie (Holanda - 1ª Divisão)</h5>
+                        <span class="badge-gpg">~3.10 Gols/Jogo</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> A escola do "Futebol Total". Times como PSV, Ajax e Feyenoord costumam golear com frequência, elevando a média da liga inteira.</p>
+                    <p class="text-key mb-0">Ponto Chave: O mercado de Over 2.5 aqui tem uma taxa de ocorrência superior a 60% em média.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">4. Erste Liga (Áustria - 2ª Divisão)</h5>
+                        <span class="badge-gpg">~3.05 Gols/Jogo</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Segue o padrão germânico de intensidade. Times jovens e foco total em verticalidade.</p>
+                    <p class="text-key mb-0">Ponto Chave: Muito forte para o mercado de Ambas Marcam (BTTS) acompanhando os gols.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">5. Super League (Suíça - 1ª Divisão)</h5>
+                        <span class="badge-gpg">~3.00 Gols/Jogo</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Uma liga equilibrada, mas com defesas que cometem muitos erros táticos. Isso gera placares movimentados de ambos os lados.</p>
+                    <p class="text-key mb-0">Ponto Chave: Constância. É uma liga que raramente oscila para baixo na média de gols.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">6. Premier League (Inglaterra - 1ª Divisão)</h5>
+                        <span class="badge-gpg">~2.85 a 3.20 Gols/Jogo</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> A liga mais rica do mundo atrai os melhores atacantes. Recentemente, a Premier League quebrou recordes históricos de gols em uma única temporada (3.28 em 23/24).</p>
+                    <p class="text-key mb-0">Ponto Chave: Alta tecnologia e tempo de bola rolando superior a outras ligas.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">7. Eliteserien (Noruega - 1ª Divisão)</h5>
+                        <span class="badge-gpg">~2.95 Gols/Jogo</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> O futebol escandinavo é conhecido pelo vigor físico e cruzamentos na área. A liga norueguesa se destaca por jogos muito abertos.</p>
+                    <p class="text-key mb-0">Ponto Chave: Excelente para buscar gols no segundo tempo.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">8. A-League (Austrália - 1ª Divisão)</h5>
+                        <span class="badge-gpg">~2.90 Gols/Jogo</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Sem rebaixamento em alguns formatos, os times jogam com liberdade total. O nível técnico defensivo é menor que o ofensivo.</p>
+                    <p class="text-key mb-0">Ponto Chave: Conhecida como a "Liga dos Gols no Final", onde muitos gols saem após os 80 minutos.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">9. Bundesliga 2 (Alemanha - 2ª Divisão)</h5>
+                        <span class="badge-gpg">~2.85 Gols/Jogo</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Estádios lotados e times tradicionais que buscam o retorno à elite. O jogo é extremamente físico e as defesas costumam ceder sob pressão.</p>
+                    <p class="text-key mb-0">Ponto Chave: Alta incidência de Over 1.5 gols ainda no primeiro tempo.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">10. Premier League (Islândia - 1ª Divisão)</h5>
+                        <span class="badge-gpg">~2.80 Gols/Jogo</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Uma liga quase amadora em estrutura, mas profissional em gols. O clima e os campos favorecem erros defensivos e chutes de longa distância.</p>
+                    <p class="text-key mb-0">Ponto Chave: Uma das favoritas para quem opera em ligas alternativas/exóticas.</p>
+                </div>
             </div>
         </div>
 
-        <div id="resultadoView" class="mt-4 p-3 bg-black rounded border border-secondary" style="display:none;">
-            <div class="row text-center">
-                <div class="col-md-6 border-end border-secondary">
-                    <div class="text-warning small fw-bold">ENTRADA 1 (PROTEÇÃO)</div>
-                    <div id="resAposta1" class="h4 text-light fw-bold mt-1">R$ 0,00</div>
-                    <div class="text-muted x-small">Se vencer: Você recupera seus R$ <span class="valTotal"></span></div>
+        <div class="tab-pane fade" id="tab-under">
+            <h4 class="text-info mb-4"><i class="fas fa-shield-alt me-2"></i>As Ligas Mais "Under" do Mundo</h4>
+            <div class="row">
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">1. Azadegan League (Irã - 2ª Divisão)</h5>
+                        <span class="badge-gpg bg-info">~77% Under 2.5</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> É mundialmente conhecida como a "Rainha do Under". O nível técnico ofensivo é baixo e os times jogam de forma extremamente defensiva para garantir um ponto.</p>
+                    <p class="text-key mb-0">Ponto Chave: O placar de 0-0 ou 1-0 é quase o padrão aqui.</p>
                 </div>
-                <div class="col-md-6">
-                    <div class="text-success small fw-bold">ENTRADA 2 (LUCRO)</div>
-                    <div id="resAposta2" class="h4 text-light fw-bold mt-1">R$ 0,00</div>
-                    <div class="text-muted x-small">Se vencer: Lucro de <span id="resLucroAbsoluto" class="text-success fw-bold">R$ 0,00</span></div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">2. Ligue 1 (Tunísia)</h5>
+                        <span class="badge-gpg bg-info">~73% Under 2.5</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> O futebol tunisiano é pautado pelo rigor tático e pela força física. Há uma enorme dificuldade na criação de jogadas, resultando em partidas muito truncadas no meio-campo.</p>
+                    <p class="text-key mb-0">Ponto Chave: Ideal para quem busca mercados de "Não" em Ambas Marcam.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">3. Primera B Nacional (Argentina - 2ª Divisão)</h5>
+                        <span class="badge-gpg bg-info">~70% Under 2.5</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Conhecida pela "garra" e pelo excesso de faltas. É uma liga de muito contato físico onde os gramados nem sempre ajudam o jogo fluido.</p>
+                    <p class="text-key mb-0">Ponto Chave: Jogos fora de casa são duríssimos para os favoritos, que raramente goleiam.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">4. Botola Pro (Marrocos)</h5>
+                        <span class="badge-gpg bg-info">~63% Under 2.5</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Uma liga de elite tecnicamente, mas com uma cultura de "sofrer poucos gols". Os times marroquinos são organizados defensivamente, inspirados no sucesso recente de sua seleção nacional.</p>
+                    <p class="text-key mb-0">Ponto Chave: Ótima para trabalhar o mercado de Under 1.5 no primeiro tempo.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">5. Premier League (Egito)</h5>
+                        <span class="badge-gpg bg-info">~66% Under 2.5</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Semelhante à Tunísia e Marrocos, o Egito mantém uma liga onde o controle de jogo é prioritário. Mesmo os times grandes costumam vencer por placares baixos.</p>
+                    <p class="text-key mb-0">Ponto Chave: Jogos entre times do meio da tabela têm tendência altíssima ao 0-0.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">6. Ligue 2 (França - 2ª Divisão)</h5>
+                        <span class="badge-gpg bg-info">~53% a 60%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Ao contrário da Bundesliga 2, a 2ª divisão francesa é famosa por ser pragmática. Os times sobem para a elite com base em defesas sólidas, não ataques explosivos.</p>
+                    <p class="text-key mb-0">Ponto Chave: Muito consistente para a estratégia de Under 2.5.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">7. Série B (Brasil)</h5>
+                        <span class="badge-gpg bg-info">~58% Under 2.5</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> O equilíbrio é a marca registrada. Como o acesso à Série A vale muito dinheiro, os times evitam se expor, principalmente no segundo turno da competição.</p>
+                    <p class="text-key mb-0">Ponto Chave: Lidera as estatísticas de "Under" na América do Sul fora da Argentina.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">8. Serie C - Grupo B (Itália)</h5>
+                        <span class="badge-gpg bg-info">~61% Under 2.5</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> A base da pirâmide do futebol italiano ainda respira o Catenaccio (ferrolho). As divisões inferiores da Itália são muito táticas e focadas em não dar espaços.</p>
+                    <p class="text-key mb-0">Ponto Chave: Jogos à tarde costumam ter médias ainda menores de gols.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">9. Segunda División (Espanha - "La Liga 2")</h5>
+                        <span class="badge-gpg bg-info">~50% a 55%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Uma das ligas mais difíceis do mundo para se marcar gols. O medo de perder o bônus de televisão da elite faz com que os clubes joguem pelo erro do adversário.</p>
+                    <p class="text-key mb-0">Ponto Chave: Uma das ligas com maior número de empates no mundo.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">10. Premier League (África do Sul - PSL)</h5>
+                        <span class="badge-gpg bg-info">~68% Under 2.5</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Jogos de muita velocidade, mas com finalizações de baixa qualidade. O volume de jogo não se traduz em bolas na rede.</p>
+                    <p class="text-key mb-0">Ponto Chave: Mercados de "Menos de 0.5 Gols no 1º Tempo" são populares aqui.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-btts">
+            <h4 class="text-success mb-4"><i class="fas fa-exchange-alt me-2"></i>As Ligas com Mais "Ambas Marcam" (BTTS - SIM)</h4>
+            <div class="row">
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">1. National League (Inglaterra - 5ª Divisão)</h5>
+                        <span class="badge-gpg bg-success text-white">~65% a 68%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> É o "padrão ouro" do BTTS. Por ser uma liga de transição entre o amador e o profissional, o preparo físico é alto, mas a organização tática defensiva é falha. Os times buscam o gol os 90 minutos.</p>
+                    <p class="text-key mb-0">Ponto Chave: Os times da casa raramente ficam sem marcar, e os visitantes jogam sem medo.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">2. Bundesliga (Alemanha - 1ª Divisão)</h5>
+                        <span class="badge-gpg bg-success text-white">~62% a 64%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> A elite alemã não aparece apenas no "Over", mas também aqui. O estilo de pressão alta (gegenpressing) deixa as defesas muito expostas ao contra-ataque. Mesmo o último colocado costuma marcar contra os gigantes.</p>
+                    <p class="text-key mb-0">Ponto Chave: Ideal para combinar "Over 2.5 + BTTS".</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">3. Regionalliga (Alemanha - Ligas Regionais)</h5>
+                        <span class="badge-gpg bg-success text-white">~66%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Nas divisões regionais alemãs, a disparidade técnica e o foco total na ofensividade criam jogos malucos, como 3-2, 2-2 ou 4-1 com frequência.</p>
+                    <p class="text-key mb-0">Ponto Chave: Perfeito para quem busca estatísticas de ligas alternativas.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">4. Eerste Divisie (Holanda - 2ª Divisão)</h5>
+                        <span class="badge-gpg bg-success text-white">~60% a 63%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Como mencionado no capítulo de gols, a cultura holandesa ignora a retranca. Os times aceitam levar um gol se tiverem a chance de marcar dois.</p>
+                    <p class="text-key mb-0">Ponto Chave: Se um time sai vencendo por 2-0, o adversário raramente desiste, buscando o "gol de honra" que garante o BTTS.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">5. Super League (Suíça)</h5>
+                        <span class="badge-gpg bg-success text-white">~60%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Uma liga de 10 times que se enfrentam muitas vezes. Eles se conhecem profundamente, o que neutraliza as estratégias defensivas e favorece os ataques.</p>
+                    <p class="text-key mb-0">Ponto Chave: Alta média de gols sofridos por jogo em quase todos os clubes da tabela.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">6. Premier League (Islândia)</h5>
+                        <span class="badge-gpg bg-success text-white">~64%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Jogos abertos, vento forte e erros individuais frequentes. Na Islândia, o "Ambas Marcam" costuma bater ainda no primeiro tempo em muitas rodadas.</p>
+                    <p class="text-key mb-0">Ponto Chave: Ótima para operar em horários alternativos (verão europeu).</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">7. Eliteserien (Noruega)</h5>
+                        <span class="badge-gpg bg-success text-white">~59% a 61%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Semelhante à Suíça, os times noruegueses têm uma mentalidade de jogo vertical. O uso intenso de cruzamentos na área gera muitos gols de bola parada para ambos os lados.</p>
+                    <p class="text-key mb-0">Ponto Chave: O "Ambas Marcam" é muito forte quando os times do meio da tabela se enfrentam.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">8. A-League (Austrália)</h5>
+                        <span class="badge-gpg bg-success text-white">~58% a 62%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Uma liga "franqueada" (sem rebaixamento) onde o entretenimento é prioridade. O nível dos atacantes estrangeiros geralmente é superior ao dos defensores locais.</p>
+                    <p class="text-key mb-0">Ponto Chave: Incrível taxa de BTTS nos segundos tempos (o famoso gol no final).</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">9. MLS (Estados Unidos)</h5>
+                        <span class="badge-gpg bg-success text-white">~57% a 60%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> A liga americana investe pesado em "Designated Players" (estrelas do ataque), enquanto o teto salarial muitas vezes limita a qualidade das zagas. Isso cria um desequilíbrio pró-gol.</p>
+                    <p class="text-key mb-0">Ponto Chave: O fator casa é muito forte, garantindo quase sempre o gol do mandante.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">10. Serie B (Itália)</h5>
+                        <span class="badge-gpg bg-success text-white">~55% a 58%</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> A nova geração de técnicos italianos abandonou o jogo defensivo extremo. A Série B italiana hoje é uma das ligas mais competitivas e movimentadas da Europa.</p>
+                    <p class="text-key mb-0">Ponto Chave: Surpreendente para quem ainda acha que o futebol italiano é apenas defesa.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-ht">
+            <h4 class="text-primary mb-4"><i class="fas fa-bolt me-2"></i>Ligas com Mais Gols no 1º Tempo (HT)</h4>
+            <div class="row">
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">1. Bundesliga (Alemanha - 1ª Divisão)</h5>
+                        <span class="badge-gpg bg-primary text-white">~78% a 82% HT</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> A elite alemã é a rainha do gol precoce. Os times entram em campo com uma pressão sufocante e linhas muito altas. É comum vermos 2 ou 3 gols antes do intervalo em jogos do Bayern, Dortmund ou Leverkusen.</p>
+                    <p class="text-key mb-0">Ponto Chave: Excelente para a estratégia de entrar no Over 0.5 HT após os 15 minutos de jogo, quando a odd sobe.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">2. Eerste Divisie (Holanda - 2ª Divisão)</h5>
+                        <span class="badge-gpg bg-primary text-white">~80% HT</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Novamente a "segunda" da Holanda aparece. Como o foco é o desenvolvimento de jovens atletas, o jogo é corrido e pouco tático desde o primeiro minuto.</p>
+                    <p class="text-key mb-0">Ponto Chave: Se o jogo está 0-0 aos 20 minutos nesta liga, a probabilidade estatística de sair um gol até o intervalo é altíssima.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">3. Ömvr. Bundesliga (Áustria - 1ª Divisão)</h5>
+                        <span class="badge-gpg bg-primary text-white">~77% HT</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> O futebol austríaco é vertical e segue a escola da Red Bull (Salzburg). O objetivo é roubar a bola e finalizar o mais rápido possível, resultando em muitos gols precoces.</p>
+                    <p class="text-key mb-0">Ponto Chave: Times como o Red Bull Salzburg costumam marcar (ou sofrer) logo nos primeiros 15 minutos.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">4. Premier League (Inglaterra - 1ª Divisão)</h5>
+                        <span class="badge-gpg bg-primary text-white">~74% a 76% HT</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> A intensidade física da Premier League é a maior do mundo. Não há o "estudo" lento do adversário; os times buscam o ataque com transições em velocidade máxima desde o apito inicial.</p>
+                    <p class="text-key mb-0">Ponto Chave: É a liga com maior número de gols marcados nos primeiros 10 minutos de jogo na Europa.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">5. Liga J1 (Japão)</h5>
+                        <span class="badge-gpg bg-primary text-white">~73% HT</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Embora tático, o futebol japonês é muito disciplinado na execução de jogadas ensaiadas no início das partidas. Os times mandantes costumam imprimir um ritmo muito forte no começo.</p>
+                    <p class="text-key mb-0">Ponto Chave: Ideal para operar em horários matutinos (fuso brasileiro).</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">6. Super League (Suíça)</h5>
+                        <span class="badge-gpg bg-primary text-white">~75% HT</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Ligas com poucos times tendem a ser mais agressivas. Na Suíça, a média de gols no HT é impulsionada por defesas que demoram a "entrar no jogo" e ataques muito oportunistas.</p>
+                    <p class="text-key mb-0">Ponto Chave: Média superior a 1.2 gols por primeiro tempo em rodadas específicas.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">7. Premier League (Islândia)</h5>
+                        <span class="badge-gpg bg-primary text-white">~78% HT</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> As condições climáticas e o estilo de jogo direto fazem com que a bola esteja sempre perto das áreas. O erro defensivo precoce é uma marca registrada aqui.</p>
+                    <p class="text-key mb-0">Ponto Chave: Uma das melhores ligas para buscar o Over 1.5 HT (dois gols no primeiro tempo).</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">8. A-League (Austrália)</h5>
+                        <span class="badge-gpg bg-primary text-white">~72% HT</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Na Austrália, o jogo é muito "box-to-box" (de uma área a outra). Os times não retêm a bola no meio-campo, o que gera finalizações rápidas.</p>
+                    <p class="text-key mb-0">Ponto Chave: Ocupa o topo das estatísticas de gols HT na região da Ásia/Oceania.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">9. Regionalliga West (Alemanha)</h5>
+                        <span class="badge-gpg bg-primary text-white">~76% HT</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> As ligas regionais alemãs funcionam quase como "laboratórios" de gols. A disparidade entre alguns times faz com que o placar seja aberto muito cedo.</p>
+                    <p class="text-key mb-0">Ponto Chave: Ótima para combinar listas de favoritos que marcam no HT.</p>
+                </div>
+                <div class="col-12 league-card">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="text-light">10. Hong Kong Premier League</h5>
+                        <span class="badge-gpg bg-primary text-white">~75% HT</span>
+                    </div>
+                    <p class="history-text"><strong>O Histórico:</strong> Uma liga alternativa, mas extremamente lucrativa para gols. As defesas são tecnicamente frágeis e os ataques costumam aproveitar os espaços logo no início.</p>
+                    <p class="text-key mb-0">Ponto Chave: Ligas asiáticas menores costumam ter odds desajustadas para o HT, o que gera valor.</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-function calcularProtecao() {
-    const o1 = parseFloat(document.getElementById('odd1').value);
-    const o2 = parseFloat(document.getElementById('odd2').value);
-    const total = parseFloat(document.getElementById('investimento').value);
-
-    if (o1 > 1 && o2 > 0 && total > 0) {
-        // 1. Valor para recuperar o total investido na Odd 1
-        const aposta1 = total / o1;
-        
-        // 2. O que sobra vai para a Odd 2
-        const aposta2 = total - aposta1;
-        
-        // 3. Lucro se a Odd 2 vencer (Retorno da aposta 2)
-        const lucroBrutoAposta2 = aposta2 * o2;
-
-        document.getElementById('resAposta1').innerText = "R$ " + aposta1.toFixed(2);
-        document.getElementById('resAposta2').innerText = "R$ " + aposta2.toFixed(2);
-        document.getElementById('resLucroAbsoluto').innerText = "R$ " + lucroBrutoAposta2.toFixed(2);
-        
-        document.querySelectorAll('.valTotal').forEach(el => el.innerText = total.toFixed(2));
-        document.getElementById('resultadoView').style.display = 'block';
-    }
-}
-</script>
 
         {# --- IMPLEMENTAÇÃO 3: CENTRAL DE VÍDEOS (4 VÍDEOS) --- #}
 <h2 class="text-light fw-bold mb-4 border-bottom pb-2">Central de Vídeos Educativos</h2>
